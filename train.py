@@ -23,14 +23,17 @@ parser.add_argument("--epoch", help="epoch", type=int, default=100)
 parser.add_argument("--save_file", help="save directory", type=str, default = './output')
 parser.add_argument("--config", help="config file", type=str, default="config/pretrain.yaml")
 args = parser.parse_args()
-print(args)
-print()
+
+logger = utils.logger(args.save_file)
+
+logger(args)
+logger()
 
 try :
     with open(args.save_file+'_save.pt', 'w') as w :
         w.write("training...")
 except :
-    print("ERR : Invalid argument 'save_file'")
+    logger("ERR : Invalid argument 'save_file'")
     exit(1)
 
 if args.ngpu>0:
@@ -56,14 +59,14 @@ if model_params['kind']=='RNN' :
 elif model_params['kind']=='Transformer':
     model = TransformerModel(model_params, n_char, i_to_c)
 else :
-    print("ERR : Not allowed model. Default model is RNN")
+    logger("ERR : Not allowed model. Default model is RNN")
     exit(1)
 
-print("number of parameters :", sum(p.numel() for p in model.parameters() if p.requires_grad))
-print()
+logger(f"number of parameters : {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+logger()
 pretrain = data_config.get('pretrain', None)
 if pretrain :
-    print(f'pretrain : {pretrain}\n')
+    logger(f'pretrain : {pretrain}\n')
 
 #============ def train function ==========
 def model_train(train_data, valid_data, epoch, save_file = None, device = device, model = model, init_model = pretrain) : 
@@ -82,9 +85,9 @@ def model_train(train_data, valid_data, epoch, save_file = None, device = device
     overfitting_cnt = 0         # to break the training after over-fitting. if the loss is bigger than min_loss for 100 times in a row, stop training.
     
     if valid_data :
-        print("epoch | tloss  | vloss  | time\n")
+        logger("epoch | tloss  | vloss  | time\n")
     else :
-        print("epoch | tloss  | time\n")
+        logger("epoch | tloss  | time\n")
         
     for epoch in range(1, epoch+1) :
         st = time.time()
@@ -138,13 +141,13 @@ def model_train(train_data, valid_data, epoch, save_file = None, device = device
 
             end = time.time()
             if epoch%10 == 0 : ##########################
-                print(f"{epoch:<5d} |{train_loss:7.4f} |{valid_loss:7.4f} | {end-st:.2f}\n") 
+                logger(f"{epoch:<5d} |{train_loss:7.4f} |{valid_loss:7.4f} | {end-st:.2f}\n")
 
         else :  # final training of 5-fold cross-validation 
             train_loss = np.mean(np.array(train_loss))
             end = time.time()
             if epoch%10 == 0 :
-                print(f"{epoch:<5d} |{train_loss:7.4f} | {end-st:.2f}\n") 
+                logger(f"{epoch:<5d} |{train_loss:7.4f} | {end-st:.2f}\n")
 
     if not valid_data and save_file :
         name = f'{save_file}_save.pt'
@@ -160,16 +163,16 @@ valid_mode = data_config['valid_mode']
  
 if valid_mode=='val' :
     if data_config.get('valid_file', None) == None :
-        print("ERR : There is no validation file(valid_file) at data config")
+        logger("ERR : There is no validation file(valid_file) at data config")
     with open(data_config['train_file']) as f:
         train_data = f.readlines()
         train_data = [s.strip().split('\t')[1] for s in train_data]
     with open(data_config['valid_file']) as f:
         valid_data = f.readlines()
         valid_data = [s.strip().split('\t')[1] for s in valid_data]
-    print("we use validation test")
-    print("number of train_set :", len(train_data))
-    print("number of valid_set :", len(valid_data))
+    logger("we use validation test")
+    logger(f"number of train_set : {len(train_data)}")
+    logger(f"number of valid_set : {len(valid_data)}")
 
 elif valid_mode=='5cv' :
     with open(data_config['train_file']) as f:
@@ -177,16 +180,16 @@ elif valid_mode=='5cv' :
         train_data = [s.strip().split('\t')[1] for s in train_data]
     random.shuffle(train_data)
     train_data_list = [train_data[((len(train_data)*i)//5):((len(train_data)*(i+1))//5)] for i in range(5)]
-    print("we use 5-fold cross-validation test")
-    print("number of train_set :", len(train_data))
-print()
+    logger("we use 5-fold cross-validation test")
+    logger(f"number of train_set : {len(train_data)}")
+logger()
 
 #============== main code ========================
 if valid_mode == 'val' :
-    print("============== Train Start ==============\n")
+    logger("============== Train Start ==============\n")
     _, min_epoch = model_train(train_data, valid_data, epoch = args.epoch, save_file = args.save_file)
-    print(f"best epoch : {min_epoch}\nsave file  : {args.save_file}_save.pt")
-    print()
+    logger(f"best epoch : {min_epoch}")
+    logger(f"save file  : {args.save_file}_save.pt\n")
 
 #============== 5-fold cross-validation =============
 elif valid_mode == '5cv' :
@@ -201,23 +204,26 @@ elif valid_mode == '5cv' :
                 valid_data_+=train_data_list[i]
             else :
                 train_data_+=train_data_list[i]
-        print(f"============== Fold {fold} Start ==============\n")
+        logger(f"============== Fold {fold} Start ==============\n")
         epoch_loss, _ = model_train(train_data_, valid_data_, epoch = args.epoch)
         fold_loss.append(epoch_loss)
         min_epoch = min(min_epoch, len(epoch_loss))
     
     #============== calculate the train epoch =============
      
-    print(f"============== All Fold End ==============\n")
+    logger(f"============== All Fold End ==============\n")
     fold_loss = [el[:min_epoch] for el in fold_loss]
     fold_loss = np.array(fold_loss)
     fold_loss = np.mean(fold_loss, axis=0)
     train_epoch = np.argmin(fold_loss)+1
-    print(f"best epoch : {train_epoch}\n")
+    logger(f"best epoch : {train_epoch}\n")
 
     #============== train with calculated epoch ===========
-    print("============== Train Start ===============\n")
+    logger("============== Train Start ===============\n")
     model_train(train_data, None, epoch = train_epoch, save_file = args.save_file)
-    print(f"best epoch : {train_epoch}\nsave file  : {args.save_file}_save.pt\n")
+    logger("================  Finish  ================\n")
+    logger(f"best epoch : {train_epoch}")
+    logger(f"save file  : {args.save_file}_save.pt\n")
 
+logger.save()
 

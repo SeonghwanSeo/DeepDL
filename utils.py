@@ -12,22 +12,24 @@ class logger() :
         try :
             with open(self.log_file, 'w') as w :
                 w.write('')
-            print("log -", self.log_file)
+            print("==========================================")
+            print(f"start logging\n")
         except :
             print("ERR : Unvalid argument 'save_file'")
             exit(1)
 
-    def __call__(self, log, put_log = True) :
+    def __call__(self, log="", put_log = True) :
         log = str(log)
         print(log)
         if put_log :
             self.log.append(log)
 
-    def log(self) :
+    def save(self) :
         with open(self.log_file, 'w') as w :
             for log in self.log :
                 w.write(log+'\n')
-        print("log finish -", self.log_file)
+        print(f"log finish")
+        print(f"log file : {self.log_file}")
 
 def distmaker(y,n,bend,send,out=False,norm=True):
     width=(bend-send)/n

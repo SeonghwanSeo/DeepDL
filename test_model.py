@@ -15,16 +15,37 @@ from quantifier import quantifier
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', default = 'config/test_worlddrug.yaml')
+parser.add_argument('--save_dir', default = './')
 
 args = parser.parse_args()
-print('config :', args.config)
-print()
+
+if args.save_dir[-1]=='/' :
+    args.save_dir = args.save_dir[:-1]
+
+log_file = args.save_dir+'/roc_log'
+logger = utils.logger(log_file)   #print & logging at {args.save_dir}/log
+
+logger(f'config : {args.config}')
+logger()
 
 with open(args.config, 'r') as f :
     config = yaml.safe_load(f)
     data_config = config['data_config']
     model_params = config['model_params']
     model_params['dropout']=0.0
+
+d_key = list(data_config.keys())
+m_key = list(model_params.keys())
+d_key.sort()
+m_key.sort()
+logger("data_config :")
+for k in d_key :
+    logger(f"\t{k}: {data_config[k]}")
+logger()
+logger("model_parameter :")
+for k in m_key :
+    logger(f"\t{k}: {model_params[k]}")
+logger()
 
 ngpu=1
 cmd = utils.set_cuda_visible_device(ngpu)
@@ -41,15 +62,15 @@ if model_params['kind']=='RNN' :
 elif model_params['kind']=='Transformer':
     model = TransformerModel(model_params, n_char, i_to_c)
 else :
-    print("ERR : Not allowed model. Default model is RNN")
+    logger("ERR : Not allowed model. Default model is RNN", ERR=True)
     exit(1)
 
 model = utils.initialize_model(model, device, data_config['save_file'])
 model.eval()
 
-print("number of parameters :", sum(p.numel() for p in model.parameters() if p.requires_grad))
-print()
-mod_quantifier = quantifier(model, c_to_i, model_params['stereo'])
+logger("number of parameters :", sum(p.numel() for p in model.parameters() if p.requires_grad))
+logger()
+mod_quantifier = quantifier(model, c_to_i, stereo = model_params['stereo'], reduction = 'sum')
 #============= load testset data =============
 data_smiles = {}
 
@@ -75,7 +96,6 @@ with torch.no_grad() :
             qed_value = qed(mol)
             qed_result.append(qed(mol))
         data_result[data] = (answer, mod_result, qed_result)
-
 #============= AUROC scoring of model ================
 for pos_set in data_config['positive_set'] :
     for neg_set in data_config['negative_set'] :
@@ -85,20 +105,18 @@ for pos_set in data_config['positive_set'] :
         pos_result = data_result[pos_set]
         neg_result = data_result[neg_set]
 
-        print("===============================")
-        print(f"positive set : {pos_name:<10} ({len(pos_result[0])} smiles)")
-        print(f"negative set : {neg_name:<10} ({len(neg_result[0])} smiles)")
-        print()
-
+        logger("===============================")
+        logger(f"positive set : {pos_name:<10} ({len(pos_result[0])} smiles)")
+        logger(f"negative set : {neg_name:<10} ({len(neg_result[0])} smiles)")
+        logger()
         answer = np.array(pos_result[0] + neg_result[0])
         mod_score = -np.array(pos_result[1] + neg_result[1])
         qed_score = np.array(pos_result[2] + neg_result[2])
-        
         mod_score = roc_auc_score(answer, mod_score)
         qed_score = roc_auc_score(answer, qed_score)
-        
-        print(f"model  {mod_score:.4f}")
-        print(f"qed    {qed_score:.4f}")
-        print(f"data : {data_config['save_file'][:-8]}_{pos_name}_{neg_name}.pkl\n")
-        with open(str(f"{data_config['save_file'][:-8]}_{pos_name}_{neg_name}.pkl"), 'wb') as w :
+        logger(f"model  {mod_score:.4f}")
+        logger(f"qed    {qed_score:.4f}")
+        logger(f"data : {args.save_dir}/{pos_name}_{neg_name}.pkl\n")
+        with open(str(f"{args.save_dir}/{pos_name}_{neg_name}.pkl"), 'wb') as w :
             pickle.dump((answer,qed_score,mod_score), w)
+logger.save()

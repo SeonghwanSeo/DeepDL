@@ -3,26 +3,31 @@ import torch.nn as nn
 import math
 
 class TransformerModel(nn.Module):
-    def __init__(self, args, n_char, i_to_c):
+    def __init__(self, params, n_char, i_to_c):
         super(TransformerModel, self).__init__()
-        self.pos_encoder = PositionalEncoding(args.n_feature, args.dropout)
-        encoder_layers = nn.TransformerEncoderLayer(args.n_feature, args.n_head, args.n_ff, args.dropout)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, args.n_layer)
-        self.encoder = nn.Embedding(n_char, args.n_feature)
-        self.n_input = args.n_feature
-        self.decoder = nn.Linear(args.n_feature, n_char)
+        n_feature = params.get('hidden_size', 1024)
+        n_head = params.get('n_head', 8)
+        n_ff = params.get('n_ff', 1024)
+        dropout = params.get('dropout', 0.2)
+        n_layer = params.get('n_layers', 4)
+        self.pos_encoder = PositionalEncoding(n_feature, dropout)
+        encoder_layers = nn.TransformerEncoderLayer(n_feature, n_head, n_ff, dropout)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, n_layer)
+        self.encoder = nn.Embedding(n_char, n_feature)
+        self.n_input = n_feature
+        self.decoder = nn.Linear(n_feature, n_char)
         self.src_mask = None
         self.softmax = nn.Softmax(dim=-1)
-        self.start_codon = nn.Parameter(torch.zeros((args.n_feature)), requires_grad=True)
+        self.start_codon = nn.Parameter(torch.zeros((n_feature)), requires_grad=True)
         self.n_char=n_char
         self.i_to_c=i_to_c
 
     def _generate_square_subsequent_mask(self, length) :
-        mask = torch.triu(torch.ones(length, length)) == 1
+        mask = (torch.triu(torch.ones(length, length)) == 1).transpose(0, 1)
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
-    def forward(self, src, has_mask=False):
+    def forward(self, src, has_mask=True):
         src = src.permute(1, 0)                                                     #src : len*batch
         device = src.device
         if has_mask:

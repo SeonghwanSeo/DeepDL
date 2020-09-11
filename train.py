@@ -17,24 +17,26 @@ import random
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--ngpu", help="number of gpu", type=int, default=4)
-parser.add_argument("--num_workers", help="number of workers", type=int, default = 1)
+parser.add_argument("--num_workers", help="number of workers", type=int, default = 4)
 parser.add_argument("--batch_size", help="batch_size", type=int, default=400)
-parser.add_argument("--epoch", help="epoch", type=int, default=100)
-parser.add_argument("--save_file", help="save directory", type=str, default = './output')
+parser.add_argument("--epoch", help="epoch", type=int, default=1000)
+parser.add_argument("--save_dir", help="save directory", type=str, default = './')
 parser.add_argument("--config", help="config file", type=str, default="config/pretrain.yaml")
 args = parser.parse_args()
 
-logger = utils.logger(args.save_file)
+if os.path.isdir(args.save_dir) :
+    os.system('mkdir '+args.save_dir)
+
+if args.save_dir[-1]=='/' :
+    args.save_dir = args.save_dir[:-1]
+
+log_file = args.save_dir+'/log'
+logger = utils.logger(log_file)   #print & logging at {args.save_dir}/log (log_file)
 
 logger(args)
 logger()
 
-try :
-    with open(args.save_file+'_save.pt', 'w') as w :
-        w.write("training...")
-except :
-    logger("ERR : Invalid argument 'save_file'")
-    exit(1)
+save_file = args.save_dir+'/save.pt'
 
 if args.ngpu>0:
     cmd = utils.set_cuda_visible_device(args.ngpu)
@@ -48,6 +50,18 @@ with open(args.config, 'r') as f :
     config = yaml.safe_load(f)
     data_config = config['data_config']
     model_params = config['model_params']
+d_key = list(data_config.keys())
+m_key = list(model_params.keys())
+d_key.sort()
+m_key.sort()
+logger("data_config :")
+for k in d_key :
+    logger(f"\t{k}: {data_config[k]}")
+logger()
+logger("model_parameter :")
+for k in m_key :
+    logger(f"\t{k}: {model_params[k]}")
+logger()
 
 c_to_i = pickle.load(open(data_config['c_to_i'], 'rb'))
 i_to_c = pickle.load(open(data_config['i_to_c'], 'rb'))
@@ -68,6 +82,32 @@ pretrain = data_config.get('pretrain', None)
 if pretrain :
     logger(f'pretrain : {pretrain}\n')
 
+#========== spliting data ==========
+valid_mode = data_config['valid_mode']
+ 
+if valid_mode=='val' :
+    with open(data_config['train_file']) as f:
+        train_data = f.readlines()
+        train_data = [s.strip().split('\t')[1] for s in train_data]
+    if data_config.get('valid_file', None) :
+        with open(data_config['valid_file']) as f:
+            valid_data = f.readlines()
+            valid_data = [s.strip().split('\t')[1] for s in valid_data]
+    else : 
+        train_data, valid_data = utils.splitting_data(train_data, valid_mode)
+    logger("we use validation test")
+    logger(f"number of train_set : {len(train_data)}")
+    logger(f"number of valid_set : {len(valid_data)}")
+
+elif valid_mode=='5cv' :
+    with open(data_config['train_file']) as f:
+        train_data = f.readlines()
+        train_data = [s.strip().split('\t')[1] for s in train_data]
+    train_data_list = utils.splitting_data(train_data, valid_mode)
+    logger("we use 5-fold cross-validation test")
+    logger(f"number of train_set : {len(train_data)}")
+logger()
+logger.save()
 #============ def train function ==========
 def model_train(train_data, valid_data, epoch, save_file = None, device = device, model = model, init_model = pretrain) : 
     train_dataset = MolDataset(train_data, dict(c_to_i), model_params['stereo'])
@@ -82,7 +122,7 @@ def model_train(train_data, valid_data, epoch, save_file = None, device = device
     min_loss = 10000
     min_epoch = 0
     epoch_loss = []
-    overfitting_cnt = 0         # to break the training after over-fitting. if the loss is bigger than min_loss for 100 times in a row, stop training.
+    overfitting_cnt = 0         # to break the training after over-fitting. if the loss is bigger than min_loss for 50 times in a row, stop training.
     
     if valid_data :
         logger("epoch | tloss  | vloss  | time\n")
@@ -127,75 +167,49 @@ def model_train(train_data, valid_data, epoch, save_file = None, device = device
                 min_loss = valid_loss
                 min_epoch = epoch
                 if save_file :
-                    name = f'{save_file}_save.pt'
                     if args.ngpu>1:
-                        torch.save(model.module.state_dict(), name)
+                        torch.save(model.module.state_dict(), save_file)
                     else:
-                        torch.save(model.state_dict(), name)
+                        torch.save(model.state_dict(), save_file)
             else :
                 overfitting_cnt+=1
-                if overfitting_cnt == 100 : break
-
-            for param_group in optimizer.param_groups :
-                param_group['lr'] = model_params['lr'] * (model_params['lr_decay'] ** epoch)
+                if overfitting_cnt == 50 : break
 
             end = time.time()
-            if epoch%10 == 0 : ##########################
+            if epoch%10 == 0 :
                 logger(f"{epoch:<5d} |{train_loss:7.4f} |{valid_loss:7.4f} | {end-st:.2f}\n")
+                logger.save()
 
         else :  # final training of 5-fold cross-validation 
             train_loss = np.mean(np.array(train_loss))
             end = time.time()
             if epoch%10 == 0 :
                 logger(f"{epoch:<5d} |{train_loss:7.4f} | {end-st:.2f}\n")
+                logger.save()
+        
+        for param_group in optimizer.param_groups :
+            param_group['lr'] = model_params['lr'] * (model_params['lr_decay'] ** epoch)
 
-    if not valid_data and save_file :
-        name = f'{save_file}_save.pt'
+    if not valid_data and save_file :   # final training of 5-fold cross-validation 
         if args.ngpu>1:
-            torch.save(model.module.state_dict(), name)
+            torch.save(model.module.state_dict(), save_file)
         else:
-            torch.save(model.state_dict(), name)
+            torch.save(model.state_dict(), save_file)
             
     return epoch_loss, min_epoch
 
-#========== spliting data ==========
-valid_mode = data_config['valid_mode']
- 
-if valid_mode=='val' :
-    if data_config.get('valid_file', None) == None :
-        logger("ERR : There is no validation file(valid_file) at data config")
-    with open(data_config['train_file']) as f:
-        train_data = f.readlines()
-        train_data = [s.strip().split('\t')[1] for s in train_data]
-    with open(data_config['valid_file']) as f:
-        valid_data = f.readlines()
-        valid_data = [s.strip().split('\t')[1] for s in valid_data]
-    logger("we use validation test")
-    logger(f"number of train_set : {len(train_data)}")
-    logger(f"number of valid_set : {len(valid_data)}")
-
-elif valid_mode=='5cv' :
-    with open(data_config['train_file']) as f:
-        train_data = f.readlines()
-        train_data = [s.strip().split('\t')[1] for s in train_data]
-    random.shuffle(train_data)
-    train_data_list = [train_data[((len(train_data)*i)//5):((len(train_data)*(i+1))//5)] for i in range(5)]
-    logger("we use 5-fold cross-validation test")
-    logger(f"number of train_set : {len(train_data)}")
-logger()
-
 #============== main code ========================
+#============== validation test ================
 if valid_mode == 'val' :
     logger("============== Train Start ==============\n")
-    _, min_epoch = model_train(train_data, valid_data, epoch = args.epoch, save_file = args.save_file)
+    _, min_epoch = model_train(train_data, valid_data, epoch = args.epoch, save_file = save_file)
     logger(f"best epoch : {min_epoch}")
-    logger(f"save file  : {args.save_file}_save.pt\n")
+    logger(f"save file  : {save_file}\n")
 
 #============== 5-fold cross-validation =============
 elif valid_mode == '5cv' :
     fold_loss = []
-    min_epoch = args.epoch
-
+    
     for fold in range(5) :
         train_data_ = []
         valid_data_ = []
@@ -204,15 +218,14 @@ elif valid_mode == '5cv' :
                 valid_data_+=train_data_list[i]
             else :
                 train_data_+=train_data_list[i]
-        logger(f"============== Fold {fold} Start ==============\n")
+        logger(f"============== Fold {fold+1} Start ==============\n")
         epoch_loss, _ = model_train(train_data_, valid_data_, epoch = args.epoch)
         fold_loss.append(epoch_loss)
-        min_epoch = min(min_epoch, len(epoch_loss))
     
-    #============== calculate the train epoch =============
-     
+    #============== calculate the train epoch ============= 
     logger(f"============== All Fold End ==============\n")
-    fold_loss = [el[:min_epoch] for el in fold_loss]
+    min_epoch = min([len(epoch_loss) for epoch_loss in fold_loss])      #to balance the size of each fold
+    fold_loss = [epoch_loss[:min_epoch] for epoch_loss in fold_loss]
     fold_loss = np.array(fold_loss)
     fold_loss = np.mean(fold_loss, axis=0)
     train_epoch = np.argmin(fold_loss)+1
@@ -220,10 +233,11 @@ elif valid_mode == '5cv' :
 
     #============== train with calculated epoch ===========
     logger("============== Train Start ===============\n")
-    model_train(train_data, None, epoch = train_epoch, save_file = args.save_file)
+    model_train(train_data, None, epoch = train_epoch, save_file = save_file)
     logger("================  Finish  ================\n")
     logger(f"best epoch : {train_epoch}")
-    logger(f"save file  : {args.save_file}_save.pt\n")
+    logger(f"save file  : {save_file}\n")
 
 logger.save()
-
+print(f"log finish")
+print(f"log file : {log_file}")

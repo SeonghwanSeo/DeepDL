@@ -5,18 +5,19 @@ import torch.nn as nn
 from rdkit.Chem.EnumerateStereoisomers import EnumerateStereoisomers, StereoEnumerationOptions
 
 class quantifier() :
-    def __init__(self, model, c_to_i, stereo=True) : 
+    def __init__(self, model, c_to_i, stereo=True, reduction = 'sum') : 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model = model
         self.c_to_i = c_to_i
         self.stereo = stereo
+        self.reduction = reduction
         self.nondrug = 'c1ccccc1'      #nondrug name(To be modified)
         self.nondrug_score = self.mol_to_score(self.nondrug)
         self.drug='C1CCCCC1'           #drug name(To be modified)
         self.drug_score = self.mol_to_score(self.drug)
         
     def __call__(self, smiles) :
-        score = self.mol_to_score(smiles)
+        _, score = self.mol_to_score(smiles)
         return self.normalize(score)
 
     def mol_to_score(self, smiles):
@@ -26,7 +27,8 @@ class quantifier() :
             print(smiles)
         if self.stereo : isomers = list(EnumerateStereoisomers(mol))
         else : isomers = [mol]
-        best_score = 100
+        best_score = 10000
+        best_smiles = ""
         for mol in isomers :
             s = Chem.MolToSmiles(mol, isomericSmiles=True)
             s = s+'Q'
@@ -38,7 +40,11 @@ class quantifier() :
             result = 0
             for i in range(output.size(1)-1):
                 result += p_char[0, i, x[0, i]]
-            best_score=min(best_score, result)
+            if self.reduction == 'mean' :
+                result /= output.size(1)-1
+            if result < best_score :
+                best_score = result
+                best_smiles = s
         return best_score
 
     def normalize(self, score) :

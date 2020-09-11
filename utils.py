@@ -4,63 +4,52 @@ from rdkit import Chem
 import torch.nn as nn
 import math
 from rdkit.Chem.EnumerateStereoisomers import EnumerateStereoisomers, StereoEnumerationOptions
+import random
 
 class logger() :
-    def __init__(self, save_file) :
-        self.log_file = save_file+'_log'
+    def __init__(self, log_file) :
+        self.log_file = log_file
         self.log=[]
         try :
             with open(self.log_file, 'w') as w :
-                w.write('')
+                w.write('logging...')
             print("==========================================")
             print(f"start logging\n")
         except :
-            print("ERR : Unvalid argument 'save_file'")
+            print("ERR : Unvalid argument 'save_dir'")
             exit(1)
 
-    def __call__(self, log="", put_log = True) :
-        log = str(log)
-        print(log)
+    def __call__(self, *log, ERR = False, put_log = True) :
+        log_message = ' '.join([str(l) for l in log])
+        print(log_message)
         if put_log :
-            self.log.append(log)
+            self.log.append(log_message)
+        if ERR :
+            self.save(True)
+            exit(1)
+            
 
-    def save(self) :
+    def save(self, ERR = False) :
         with open(self.log_file, 'w') as w :
             for log in self.log :
                 w.write(log+'\n')
-        print(f"log finish")
-        print(f"log file : {self.log_file}")
+        if ERR :
+            print("## There is ERROR MESSAGE ##")
+            print(f"log finish")
+            print(f"log file : {self.log_file}")
 
-def distmaker(y,n,bend,send,out=False,norm=True):
-    width=(bend-send)/n
-    x=[send]+[send+width*(0.5+i) for i in range(n)]+[bend]
-    count=[[] for i in range(n)]
-    for i in y:
-        if send<i<bend: count[int((i-send)/width)].append(y)
-    yy=[0]+[len(i) for i in count]+[0]
-    if norm:    return np.array(x),np.array(yy)/(width*len(y))
-    return np.array(x),np.array(yy)
-
-def mol_to_score(model, smiles, c_to_i, stereo=False):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    m = Chem.MolFromSmiles(smiles)
-    if stereo : isomers = list(EnumerateStereoisomers(m))
-    else : isomers = [m]
-    best_score = 100
-    for mol in isomers :
-        s = Chem.MolToSmiles(mol, isomericSmiles=True)
-        s = s+'Q'
-        x = torch.tensor([c_to_i[i] for i in list(s)]).unsqueeze(0).to(device)
-        output = model(x)
-        p_char = nn.LogSoftmax(dim = -1)(output)
-        p_char = p_char.data.cpu().numpy()
-        x = x.data.cpu().numpy()
-        result = 0
-        for i in range(output.size(1)-1):
-            result += p_char[0, i, x[0, i]]
-        result = math.log(-result)
-        best_score=min(best_score, result)
-    return best_score
+def splitting_data(train_data, validation_mode) :
+    if validation_mode == 'val' :
+        random.shuffle(train_data)
+        split_idx = len(train_data)//5
+        valid_data = train_data[:split_idx]
+        train_data = train_data[split_idx:]
+        return train_data, valid_data 
+    elif validation_mode == '5cv' : 
+        len_data = len(train_data)
+        random.shuffle(train_data)
+        train_data_list = [train_data[((len_data*i)//5):((len_data*(i+1))//5)] for i in range(5)]
+        return train_data_list
 
 def len_mask(l, max_length) :
     #l : tensor for length

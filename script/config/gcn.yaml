@@ -1,0 +1,14 @@
+#================================
+data_config:
+    positive_file: ../data/worlddrug/train
+    negative_file: ../data/zinc/train
+    balance: True
+    seed: 1
+#======= Hyperparameters ========
+model_parameters:
+    model: GCNModel
+#================================
+train_parameters:
+    valid_mode: 5cv
+    lr: 0.001
+    lr_decay: 0.998

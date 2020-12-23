@@ -1,0 +1,12 @@
+#================================
+data_config:
+    positive_file: ../data/worlddrug/train
+    shuffle: False
+#======= Hyperparameters ========
+model_parameters:
+    model: TransformerModel
+#================================
+train_parameters:
+    valid_mode: 5cv
+    init_model: result/tfm/pubchem/save.pt
+    lr: 0.0001

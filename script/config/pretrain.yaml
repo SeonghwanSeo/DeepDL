@@ -1,0 +1,11 @@
+#================================
+data_config:
+    positive_file: ../data/pubchem/train
+    shuffle: False
+#======= Hyperparameters ========
+model_parameters:
+    model: RNN
+#================================
+train_parameters:
+    valid_mode: val
+    lr: 0.0001

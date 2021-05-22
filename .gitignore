@@ -1,8 +1,4 @@
 *__pycache__*
-data/*
-*notgit*
-calculate_score/*
-*result*
-*savefile*
-test/*
-*/_*
+*result/*
+*save/*
+data/train/pubchem.smi

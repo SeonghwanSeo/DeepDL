@@ -1,14 +1,18 @@
 #================================
 data_config:
-    positive_file: ../data/worlddrug/train
-    negative_file: ../data/zinc/train
-    balance: True
-    seed: 1
+    positive_file: ../data/train/worlddrug.smi
+    negative_file: ../data/train/gdb17.smi
+    shuffle: true
 #======= Hyperparameters ========
 model_parameters:
-    model: GCNModel
+    hidden_size1: 32
+    hidden_size2: 256
+    n_layers: 4
+    n_heads: 4
+    dropout: 0.2
 #================================
 train_parameters:
-    valid_mode: 5cv
+    init_model: null
+    val_mode: val
     lr: 0.001
     lr_decay: 0.998

@@ -7,7 +7,6 @@ from rdkit.Chem.EnumerateStereoisomers import EnumerateStereoisomers
 from rdkit.Chem.rdmolops import GetAdjacencyMatrix
 from rdkit.Chem.Crippen import MolLogP
 import utils.data_utils as DATA_UTILS
-random.seed(0)
 
 """
 We use various molecule representations, so we implement dataset class and collate function for each representation.
@@ -25,7 +24,7 @@ import Util as DATA_UTIL
 MAX_ATOM = 100
 #=========== Dataset class for SMILES ============#
 class SmilesDataset(Dataset):
-    def __init__(self, smiles, stereo=False):
+    def __init__(self, smiles, stereo=True):
         self.smiles = smiles
         self.c_to_i = DATA_UTILS.C_TO_I
         self.stereo = stereo
@@ -76,7 +75,7 @@ class GraphDataset(Dataset):
         for data in data_list:
             smiles = data[0]
             label = data[1]
-            label_list.append(int(label.item()))
+            label_list.append(int(label))
             mol = Chem.MolFromSmiles(smiles)
             n = mol.GetNumAtoms()
             adj = GetAdjacencyMatrix(mol) + np.eye(n)

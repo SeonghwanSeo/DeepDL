@@ -1,23 +1,24 @@
 import argparse
 
-def parser():
+def parser(model = 'rnn'):
+    config = {'rnn': 'config/rnn.yaml', 'gcn': 'config/gcn.yaml'}
     parser = argparse.ArgumentParser(description='parser for training')
     parser.add_argument('--ngpu',
                         help='number of gpus',
                         type=int,
-                        default=0)
+                        default=1)
     parser.add_argument('--num_workers',
                         help='number of workers(cpu)',
                         type=int,
-                        default=1)
+                        default=0)
     parser.add_argument('--batch_size',
                         help='batch size',
                         type=int,
-                        default=1)
+                        default=100)
     parser.add_argument('--epoch',
                         help='training epoch',
                         type=int,
-                        default=300)
+                        default=100)
     parser.add_argument('--save_file',
                         help='path for model save file',
                         type=str,
@@ -25,6 +26,6 @@ def parser():
     parser.add_argument('--config',
                         help='config file',
                         type=str,
-                        default='config/test.yaml')
+                        default=config[model])
     args = parser.parse_args()
     return args

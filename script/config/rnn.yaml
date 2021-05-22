@@ -1,12 +1,14 @@
 #================================
 data_config:
-    positive_file: ../data/worlddrug/train
-    shuffle: False
+    positive_file: ../data/train/worlddrug.smi
+    stereo: true
 #======= Hyperparameters ========
 model_parameters:
-    model: RNN
+    hidden_size: 1024
+    n_layers: 4
+    dropout: 0.2
 #================================
 train_parameters:
-    valid_mode: 5cv
-    init_model: result/rnn/pubchen/save.pt
+    init_model: null #<pre-trained model>
     lr: 0.0001
+    lr_decay: 0.99

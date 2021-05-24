@@ -13,6 +13,6 @@ model_parameters:
 #================================
 train_parameters:
     init_model: null
-    val_mode: val
+    val_mode: 5cv
     lr: 0.001
     lr_decay: 0.998

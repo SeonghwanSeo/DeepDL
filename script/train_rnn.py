@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import torch
+import random
 import os
 from rdkit import Chem
 from torch.utils.data import DataLoader
@@ -10,6 +11,12 @@ from models import RNNLM
 import dataset as DATASET
 import utils as UTILS
 import arguments as ARGUMENTS
+
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
+np.random.seed(42)
+random.seed(42)
+torch.backends.cudnn.deterministic = True
 
 def main(args) : 
     #============ Make directory for save file =============#
@@ -80,7 +87,8 @@ def setup_hparams(args, data_config, model_params, train_params) :
 #============= Construct dataloader =============#
 def construct_dataloader(train_data, val_data, data_config, batch_size, num_workers) :
     train_dataset = DATASET.SmilesDataset(train_data, data_config['stereo'])
-    train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers, collate_fn=train_dataset.collate_fn)
+    train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True, \
+                                  num_workers=num_workers, collate_fn=train_dataset.collate_fn)
 
     val_dataset = None
     val_dataloader = None
@@ -116,9 +124,10 @@ def train_model(model, whole_data, train_params, data_config, args, device):
             param_group['lr'] = train_params['lr'] * (train_params['lr_decay'] ** epoch)
         
         train_loss = np.mean(np.array(train_loss_list))
-        model.save_model(args.save_file)
         end = time.time()
         print(f"{epoch:<5d} |{train_loss:7.4f} | {end-st:.2f}\n")
+    
+    model.save_model(args.save_file)
 
 if __name__ == '__main__' :
     args = ARGUMENTS.parser('rnn')

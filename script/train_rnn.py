@@ -59,7 +59,8 @@ def train_model(model, whole_data, train_params, data_config, save_file, device)
     train_dataloader, _ = model.construct_dataloader(train_data, None, batch_size, num_workers)
     
     #============ Train model ===============#
-    model = model.initialize_model(device, train_params.init_model)
+    init_model_file = os.path.join(train_params.init_model, 'save.pt')
+    model = model.initialize_model(device, init_model_file)
     optimizer = torch.optim.Adam(model.parameters(), lr=train_params['lr'])
     logging.info("epoch | tloss  | time")
     

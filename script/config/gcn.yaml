@@ -19,6 +19,6 @@ train:
     lr: 0.001
     lr_decay: 0.998
     batch_size: 100
-    epoch: 100
+    epoch: 1000
     gpus: 1
     num_workers: 0

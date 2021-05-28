@@ -63,7 +63,8 @@ def train_model(model, whole_data, train_params, save_file, device):
     train_dataloader, val_dataloader = model.construct_dataloader(train_data, val_data, batch_size, num_workers)
     
     #============ Train model ===============#
-    model = model.initialize_model(device, train_params.init_model)
+    init_model_file = os.path.join(train_params.init_model, 'save.pt') if train_params.init_model else None
+    model = model.initialize_model(device, init_model_file)
     optimizer = torch.optim.Adam(model.parameters(), lr=train_params.lr)
     logging.info("epoch | tloss  | vloss  | time")
     min_val_loss = 10000
@@ -104,7 +105,8 @@ def train_model_5cv(model, whole_data, train_params, save_file, device):
         train_dataloader, val_dataloader = model.construct_dataloader(train_data, val_data, batch_size, num_workers)
 
         #============ Train model ===============#
-        model = model.initialize_model(device, train_params.init_model)
+        init_model_file = os.path.join(train_params.init_model, 'save.pt') if train_params.init_model else None
+        model = model.initialize_model(device, init_model_file)
         optimizer = torch.optim.Adam(model.parameters(), lr=train_params.lr)
         logging.info("epoch | tloss  | vloss  | time")
         min_val_loss = 10000
@@ -142,7 +144,8 @@ def train_model_5cv(model, whole_data, train_params, save_file, device):
     
     logging.info("============== Train Start ===============\n")
     #============ Train model ===============#
-    model = model.initialize_model(device, train_params.init_model)
+    init_model_file = os.path.join(train_params.init_model, 'save.pt') if train_params.init_model else None
+    model = model.initialize_model(device, init_model_file)
     optimizer = torch.optim.Adam(model.parameters(), lr=train_params.lr)
     logging.info("epoch | tloss  | time")
     

@@ -7,10 +7,11 @@ import sys
 from .default_model import DefaultModel, default_trainer
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utils.data_utils import N_CHAR
+from dataset import SmilesDataset
 
 class RNNLM(DefaultModel) :
     #Static attribute
-    default_parameters = {'input_size': N_CHAR, 'hidden_size':1024, 'n_layers':4, 'dropout':0.2}
+    default_parameters = {'input_size': N_CHAR, 'stereo': True, 'hidden_size':1024, 'n_layers':4, 'dropout':0.2}
     loss_fn = nn.CrossEntropyLoss(reduction='none')
 
     def __init__(self, params = {}) :
@@ -28,6 +29,7 @@ class RNNLM(DefaultModel) :
         self.fc = nn.Linear(hidden_size, input_size)
         self.device = None  # Set during initialize_model
         self.trainer = rnnlm_trainer    #See below. Wrapper
+        self.stereo = params['stereo']
 
     def forward(self, x) :
         #================= Encoder ===================#
@@ -43,6 +45,9 @@ class RNNLM(DefaultModel) :
         retval = self.fc(retval)                                # [N, L+1, F] => [N, L+1, C]
                                                                 # C: N_CHAR, number of class(token)
         return retval
+
+    def construct_dataset(self, data) :
+        return SmilesDataset(data, stereo=self.stereo)
 
     @staticmethod
     def len_mask(l, max_length) :

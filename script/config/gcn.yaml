@@ -1,18 +1,24 @@
+name: gcn_worlddrug_zinc
 #================================
-data_config:
+data:
     positive_file: ../data/train/worlddrug.smi
-    negative_file: ../data/train/gdb17.smi
+    negative_file: ../data/train/zinc.smi
     shuffle: true
 #======= Hyperparameters ========
-model_parameters:
+model:
+    input_size: null
     hidden_size1: 32
     hidden_size2: 256
     n_layers: 4
     n_heads: 4
     dropout: 0.2
 #================================
-train_parameters:
-    init_model: null
+train:
     val_mode: 5cv
+    init_model: null
     lr: 0.001
     lr_decay: 0.998
+    batch_size: 100
+    epoch: 100
+    gpus: 1
+    num_workers: 0

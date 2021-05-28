@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
+import numpy as np
 import types
 
 class DefaultModel(nn.Module) :
@@ -41,9 +43,24 @@ class DefaultModel(nn.Module) :
         model.to(device)
         return self.trainer(model)
 
+    def construct_dataset(self, data) :
+        pass
+
+    def construct_dataloader(self, train_data, val_data, batch_size, num_workers) :
+        train_dataset = self.construct_dataset(train_data)
+        collate_fn = train_dataset.collate_fn
+        train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers, collate_fn=collate_fn)
+        if val_data is not None :
+            val_dataset = self.construct_dataset(val_data)
+            val_dataloader = DataLoader(val_dataset, batch_size, shuffle=False, num_workers=num_workers, collate_fn=collate_fn)
+        else :
+            val_dataloader = None
+
+        return train_dataloader, val_dataloader
+
 # Add method
 def default_trainer(model) :
-    def train_step(self, sample, optimizer, gradient_clip_val = 0.0) :
+    def _training_step(self, sample, optimizer, gradient_clip_val) :
         _, loss = self._step(sample)
         loss.backward()
         if gradient_clip_val > 0:
@@ -53,23 +70,42 @@ def default_trainer(model) :
         return loss
 
     @torch.no_grad()
-    def val_step(self, sample) :
+    def _validation_step(self, sample) :
         _, loss = self._step(sample)
         return loss
+
+    def train_epoch(self, train_dataloader, val_dataloader, optimizer, gradient_clip_val = 0.0) :
+        self.train()
+        loss_list = []
+        for sample in train_dataloader :
+            loss = self._training_step(sample, optimizer, gradient_clip_val) 
+            loss_list.append(loss.data.cpu().numpy())
+        train_loss = np.mean(np.array(loss_list))
+        if val_dataloader is not None :
+            self.eval()
+            loss_list = []
+            for sample in val_dataloader :
+                loss = self._validation_step(sample) 
+                loss_list.append(loss.data.cpu().numpy())
+            val_loss = np.mean(np.array(loss_list))
+        else :
+            val_loss = None
+
+        return train_loss, val_loss
     
     def save_model(self, save_file) :
         """
-        save_model()
         save_model() works the same as function torch.save().
-        Due to torch.save() save the Paralleled model(nn.DataParallel) when we trained the model in multi-gpu environment, we define save_model().
+        Due to torch.save() save the Paralleled model(nn.DataParallel) when we trained the model in multi-gpu environment,
+        we define save_model().
         """
-
         if torch.cuda.device_count() > 1:
             torch.save(self.module.state_dict(), save_file)
         else:
            torch.save(self.state_dict(), save_file)
 
-    model.train_step = types.MethodType(train_step, model)
-    model.val_step = types.MethodType(val_step, model)
+    model._training_step = types.MethodType(_training_step, model)
+    model._validation_step = types.MethodType(_validation_step, model)
+    model.train_epoch = types.MethodType(train_epoch, model)
     model.save_model = types.MethodType(save_model, model)
     return model

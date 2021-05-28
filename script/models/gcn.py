@@ -9,6 +9,7 @@ from . import layers
 from .default_model import DefaultModel, default_trainer
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utils.data_utils import N_ATOM_FEATURE
+from dataset import GraphDataset
 
 class GCNModel(DefaultModel): 
     #Static attribute
@@ -64,6 +65,9 @@ class GCNModel(DefaultModel):
         Y = self.classifier(Y)              # [N, F2] => [N, 1]
         Y = torch.sigmoid(Y)                # convert logit to probability (btw 0 to 1)
         return Y
+
+    def construct_dataset(self, data) :
+        return GraphDataset(data)
 
 def gcn_trainer(model) :
     def _step(self, sample) :

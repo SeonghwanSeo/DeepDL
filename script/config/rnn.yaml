@@ -1,14 +1,20 @@
-#================================
-data_config:
+name: rnn_worlddrug
+#============ Data ==============
+data:
     positive_file: ../data/train/worlddrug.smi
-    stereo: true
 #======= Hyperparameters ========
-model_parameters:
+model:
+    input_size: null
     hidden_size: 1024
     n_layers: 4
     dropout: 0.2
+    stereo: true
 #================================
-train_parameters:
+train:
     init_model: null #<pre-trained model>
     lr: 0.0001
     lr_decay: 0.99
+    batch_size: 100
+    epoch: 100
+    gpus: 1
+    num_workers: 0

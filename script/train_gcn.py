@@ -10,10 +10,11 @@ from models import GCNModel
 import utils as UTILS
 from utils.hydra_runner import hydra_runner
 
-torch.manual_seed(42)
-torch.cuda.manual_seed(42)
-np.random.seed(42)
-random.seed(42)
+seed = 1234
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+np.random.seed(seed)
+random.seed(seed)
 torch.backends.cudnn.deterministic = True
 
 INPUT_SIZE = UTILS.DATA_UTILS.N_ATOM_FEATURE
@@ -124,7 +125,7 @@ def train_model_5cv(model, whole_data, train_params, save_file, device):
             end = time.time()
             logging.info(f"{epoch:<5d} |{train_loss:7.4f} |{val_loss:7.4f} | {end-st:.2f}")
 
-            if overfit_cnt == 30 :
+            if overfit_cnt == 100 :
                 break
 
         max_epoch = epoch + 1

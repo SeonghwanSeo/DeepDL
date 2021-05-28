@@ -4,8 +4,6 @@ import torch
 import random
 from rdkit import Chem
 from rdkit.Chem.EnumerateStereoisomers import EnumerateStereoisomers
-from rdkit.Chem.rdmolops import GetAdjacencyMatrix
-from rdkit.Chem.Crippen import MolLogP
 import utils.data_utils as DATA_UTILS
 
 """
@@ -78,12 +76,8 @@ class GraphDataset(Dataset):
             label_list.append(int(label))
             mol = Chem.MolFromSmiles(smiles)
             n = mol.GetNumAtoms()
-            adj = GetAdjacencyMatrix(mol) + np.eye(n)
-            feature = []
-            for i in range(n):
-                atom = mol.GetAtomWithIdx(i)
-                feature.append(DATA_UTILS.get_atom_feature(atom))
-            feature = np.array(feature)
+            adj = DATA_UTILS.get_adj(mol)
+            feature = DATA_UTILS.get_atom_feature(mol)
             num_atom_list.append(n)
             self.adj_list.append(adj)
             self.feature_list.append(feature)

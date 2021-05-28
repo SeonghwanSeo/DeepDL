@@ -4,11 +4,12 @@ import torch.nn.functional as F
 import os
 import sys
 import types
+from rdkit import Chem
 
 from . import layers
 from .default_model import DefaultModel, default_trainer
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from utils.data_utils import N_ATOM_FEATURE
+from utils.data_utils import N_ATOM_FEATURE, get_atom_feature, get_adj
 from dataset import GraphDataset
 
 class GCNModel(DefaultModel): 
@@ -68,6 +69,18 @@ class GCNModel(DefaultModel):
 
     def construct_dataset(self, data) :
         return GraphDataset(data)
+
+    @torch.no_grad()
+    def test(self, smiles) :
+        mol = Chem.MolFromSmiles(smiles)
+        assert mol is not None
+        device = self.device
+        self.eval()
+        af = torch.from_numpy(get_atom_feature(mol)).to(device).float()
+        adj = torch.from_numpy(get_adj(mol)).to(device).float()
+        af, adj = af.unsqueeze(0), adj.unsqueeze(0)
+        y_pred = self(af, adj)
+        return float(self.forward(af, adj).item())
 
 def gcn_trainer(model) :
     def _step(self, sample) :

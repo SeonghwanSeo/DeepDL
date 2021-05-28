@@ -3,6 +3,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
 import types
+from omegaconf import OmegaConf
+import os
 
 class DefaultModel(nn.Module) :
     #Static attribute
@@ -11,6 +13,10 @@ class DefaultModel(nn.Module) :
 
     def __init__(self):
         super().__init__()
+
+    @property
+    def device(self) :
+        return torch.device("cuda:0" if next(self.parameters()).is_cuda else "cpu")
 
     @classmethod
     def initialize_hyperparams(cls, model_params) :
@@ -33,7 +39,6 @@ class DefaultModel(nn.Module) :
                 else:
                     nn.init.xavier_normal_(param)
         
-        self.device = device
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(self)
             model.device = device
@@ -42,6 +47,9 @@ class DefaultModel(nn.Module) :
 
         model.to(device)
         return self.trainer(model)
+
+    def test(self, smiles):
+        pass
 
     def construct_dataset(self, data) :
         pass
@@ -57,6 +65,16 @@ class DefaultModel(nn.Module) :
             val_dataloader = None
 
         return train_dataloader, val_dataloader
+
+    @classmethod
+    def load_model(cls, model_path, map_location = 'cpu') :
+        parameter_path = os.path.join(model_path, 'save.pt')
+        config_path = os.path.join(model_path, 'config.yaml')
+        config = OmegaConf.load(config_path)
+        model_params = config.model
+        model = cls(model_params)
+        model.initialize_model(map_location, parameter_path)
+        return model
 
 # Add method
 def default_trainer(model) :

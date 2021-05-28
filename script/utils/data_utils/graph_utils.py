@@ -1,4 +1,6 @@
 import numpy as np 
+from rdkit.Chem.rdmolops import GetAdjacencyMatrix
+
 #For Graph
 symbol_list = ['C', 'N', 'O', 'S', 'F', 'P', 'Cl', 'Br', 'I', 'X']
 numH_list = [0, 1, 2, 3, 4, 5, 6]
@@ -15,7 +17,7 @@ def _one_hot_encoding(x, value_list):
         vector[-1] = 1
     return vector
 
-def get_atom_feature(atom):
+def _atom_feature(atom):
     symbol_vector = _one_hot_encoding(atom.GetSymbol(),symbol_list)
     numH_vector = _one_hot_encoding(atom.GetTotalNumHs(),numH_list)
     degree_vector = _one_hot_encoding(atom.GetDegree(),degree_list)
@@ -24,3 +26,12 @@ def get_atom_feature(atom):
     # 10 + 6 + 6+ 1
     tot_vector = symbol_vector + numH_vector + degree_vector + impval_vector + aroma_vector
     return np.array(tot_vector)
+
+def get_atom_feature(mol):
+    feature = []
+    for atom in mol.GetAtoms():
+        feature.append(_atom_feature(atom))
+    return np.array(feature)
+    
+def get_adj(mol) :
+    return GetAdjacencyMatrix(mol) + np.eye(mol.GetNumAtoms())

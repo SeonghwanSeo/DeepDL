@@ -66,14 +66,13 @@ def load_gcn_data(data_config):
     with open(data_config['negative_file']) as f :
         neg_file = f.readlines()
     
-    if data_config['shuffle'] :
-        random.shuffle(pos_file) 
-        random.shuffle(neg_file) 
-    
     train_data = []
     for smiles in pos_file:
         train_data.append((smiles.strip().split('\t')[-1], 1))
     for smiles in neg_file:
         train_data.append((smiles.strip().split('\t')[-1], 0))
+    
+    if data_config['shuffle'] :
+        random.shuffle(train_data)
         
     return np.array(train_data)

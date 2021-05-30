@@ -70,7 +70,7 @@ class RNNLM(DefaultModel) :
         return mask
 
     @torch.no_grad()
-    def test(self, smiles) :
+    def test(self, smiles: str) :
         from rdkit import Chem
         mol = Chem.MolFromSmiles(smiles)
         assert mol is not None

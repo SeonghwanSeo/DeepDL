@@ -48,7 +48,7 @@ class DefaultModel(nn.Module) :
         model.to(device)
         return self.trainer(model)
 
-    def test(self, smiles):
+    def test(self, smiles: str):
         pass
 
     def construct_dataset(self, data) :

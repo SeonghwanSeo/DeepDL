@@ -71,7 +71,7 @@ class GCNModel(DefaultModel):
         return GraphDataset(data)
 
     @torch.no_grad()
-    def test(self, smiles) :
+    def test(self, smiles: str) :
         mol = Chem.MolFromSmiles(smiles)
         assert mol is not None
         device = self.device

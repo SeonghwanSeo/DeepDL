@@ -2,15 +2,17 @@ import time
 import numpy as np
 import torch
 import random
+import sys
 import os
 import logging
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), 'src'))
 from models import GCNModel
 import utils as UTILS
 from utils.hydra_runner import hydra_runner
 
-seed = 1234
+seed = 5
 torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 np.random.seed(seed)
@@ -63,8 +65,7 @@ def train_model(model, whole_data, train_params, save_file, device):
     train_dataloader, val_dataloader = model.construct_dataloader(train_data, val_data, batch_size, num_workers)
     
     #============ Train model ===============#
-    init_model_file = os.path.join(train_params.init_model, 'save.pt') if train_params.init_model else None
-    model = model.initialize_model(device, init_model_file)
+    model = model.initialize_model(device, train_params.init_weight)
     optimizer = torch.optim.Adam(model.parameters(), lr=train_params.lr)
     logging.info("epoch | tloss  | vloss  | time")
     min_val_loss = 10000
@@ -105,8 +106,7 @@ def train_model_5cv(model, whole_data, train_params, save_file, device):
         train_dataloader, val_dataloader = model.construct_dataloader(train_data, val_data, batch_size, num_workers)
 
         #============ Train model ===============#
-        init_model_file = os.path.join(train_params.init_model, 'save.pt') if train_params.init_model else None
-        model = model.initialize_model(device, init_model_file)
+        model = model.initialize_model(device, train_params.init_weight)
         optimizer = torch.optim.Adam(model.parameters(), lr=train_params.lr)
         logging.info("epoch | tloss  | vloss  | time")
         min_val_loss = 10000
@@ -144,8 +144,7 @@ def train_model_5cv(model, whole_data, train_params, save_file, device):
     
     logging.info("============== Train Start ===============\n")
     #============ Train model ===============#
-    init_model_file = os.path.join(train_params.init_model, 'save.pt') if train_params.init_model else None
-    model = model.initialize_model(device, init_model_file)
+    model = model.initialize_model(device, train_params.init_weight)
     optimizer = torch.optim.Adam(model.parameters(), lr=train_params.lr)
     logging.info("epoch | tloss  | time")
     
@@ -156,7 +155,7 @@ def train_model_5cv(model, whole_data, train_params, save_file, device):
             param_group['lr'] = train_params.lr * (train_params.lr_decay ** epoch)
     
         end = time.time()
-        logging.info(f"{epoch:<5d} |{train_loss:7.4f} | {end-st:.2f}\n")
+        logging.info(f"{epoch:<5d} |{train_loss:7.4f} | {end-st:.2f}")
     model.save_model(save_file)
 
 if __name__ == '__main__' :

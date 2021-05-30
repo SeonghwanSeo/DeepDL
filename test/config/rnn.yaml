@@ -4,6 +4,7 @@ data:
     positive_file: ../data/train/worlddrug.smi
 #======= Hyperparameters ========
 model:
+    model: RNNLM
     input_size: null
     hidden_size: 1024
     n_layers: 4
@@ -11,7 +12,7 @@ model:
     stereo: true
 #================================
 train:
-    init_model: null #<pre-trained model>
+    init_weight: null #<pre-trained model>
     lr: 0.0001
     lr_decay: 0.99
     batch_size: 100

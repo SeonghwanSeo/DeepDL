@@ -143,7 +143,7 @@ train.batch_size=100 \
 train.valid_mode='5cv' \
 train.gpus=<gpus> \
 train.num_workers=<num-workers> \
-train.epoch=100 # recommend
+train.epoch=200
 
 # Two-class classification model with Worlddrug as positive set and GDB17 as negative set.
 python -u train_gcn.py \
@@ -154,7 +154,7 @@ train.batch_size=100 \
 train.valid_mode='5cv' \
 train.gpus=<gpus> \
 train.num_workers=<num-workers> \
-train.epoch=100 # recommend
+train.epoch=200
 ```
 
 ## Test
@@ -164,7 +164,7 @@ After model training is complete, you can calculate the score of a given molecul
 ```Python
 class Model(~~) :
   @classmethod
-  def load_model(cls, model_path: str, device: Optional[str, torch.device]) -> Model:
+  def load_model(cls, model_path: str, device: Union[str, torch.device]) -> Model:
     pass
   def test(self, smiles: str) -> float :
     pass
@@ -206,5 +206,3 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
                         output file. default is STDOUT
 ```
-
-

@@ -17,6 +17,7 @@ If you have any problems or need help with the code, please add an issue or cont
   - [RNNLM](#rnnlm)
   - [GCN](#gcn)
 - [Test](#test)
+- [Research](#research)
 
 ## Environment
 
@@ -25,6 +26,7 @@ If you have any problems or need help with the code, please add an issue or cont
 - [PyTorch](https://pytorch.org/)=1.7.1, CUDA=10.2
 - [Hydra](https://hydra.cc/)=1.0.6
 - [scikit-learn](https://scikit-learn.org/stable/)=0.24.1
+- [Pandas](https://pandas.pydata.org/)=1.2.2 (Used in Research Section)
 
 ## Data
 
@@ -62,13 +64,13 @@ After upper step, the `data/` directory structure will be as follows.
     │   ├── gdb17.smi
     │   ├── pubchem.smi
     │   ├── worlddrug.smi
-    │   └── zinc.smi
+    │   └── zinc15.smi
     └── test/
         ├── chembl.smi
         ├── fda.smi
         ├── gdb17.smi
         ├── investigation.smi
-        └── zinc.smi
+        └── zinc15.smi
 ```
 
 ## Model Training
@@ -125,9 +127,9 @@ In gcn learning, you can choose between two validation test mode, normal validat
 ```bash
 # Two-class classification model with Worlddrug as positive set and ZINC as negative set.
 python -u train_gcn.py \
-name='gcn_worlddrug_zinc' \
+name='gcn_worlddrug_zinc15' \
 data.positive_file=../data/train/worlddrug.smi \
-data.negative_file=../data/train/zinc.smi \
+data.negative_file=../data/train/zinc15.smi \
 train.batch_size=100 \
 train.valid_mode='5cv' \
 train.gpus=<gpus> \
@@ -172,11 +174,11 @@ class Model(~~) :
 >>> model_path = 'result/rnn_worlddrug'
 >>> model = RNNLM.load_model(model_path, 'cuda:0')
 >>> model.test('c1ccccc1')
-84.669
->>> model_path = 'result/gcn_worlddrug_zinc'
+85.605
+>>> model_path = 'result/gcn_worlddrug_zinc15'
 >>> model = GCNModel.load_model(model_path, 'cuda:0')
 >>> model.test('c1ccccc1')
-0.989
+0.999
 """
 ```
 
@@ -185,13 +187,23 @@ class Model(~~) :
 ```bash
 python calculate_score.py -m 'result/rnn_worlddrug' -t '../data/test/fda.smi' -o <output>
 
-python calculate_score.py -c -m 'result/gcn_worlddrug_zinc' -t 'chembl' > <output>
+python calculate_score.py -c -m 'result/rnn_worlddrug' -s 'c1ccccc1'
+#output
+c1ccccc1,85.605
+
+python calculate_score.py -m 'result/gcn_worlddrug_zinc15' -t 'gdb17'
+#output
+CC12CCC34CC(N)CN3C=NC14CNC2=N,1.000
+CC12C(O)CNC13C1CC(N1)C23,1.000
+CC12CC3COC(=O)C3OC1CCNC2CN,1.000
+...
 ```
 
 Argument List.
 
 ```
-usage: calculate_score.py [-h] [-g] [-c] -m MODEL -t TEST_FILE [-o OUTPUT]
+usage: calculate_score.py [-h] [-g] [-c] -m MODEL [-t TEST_FILE] [-s SMILES]
+                          [-o OUTPUT]
 
 Calculate Drug-likeness With Model
 
@@ -202,7 +214,13 @@ optional arguments:
   -m MODEL, --model MODEL
                         model path
   -t TEST_FILE, --test_file TEST_FILE
-                        testset file path, or alias
+                        test file path
+  -s SMILES, --smiles SMILES
+                        test smiles
   -o OUTPUT, --output OUTPUT
                         output file. default is STDOUT
 ```
+
+## Research
+
+TODO

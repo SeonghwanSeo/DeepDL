@@ -22,7 +22,9 @@ root/
 The argument 'test_file' is path for testset files, or their alias.
 For the testsets used in our study, I set simple aliases for them. (See TEST_FILE_LIST, below directly)
 
-python calculate_score.py -g -m result/worlddrug_rnn/ -t fda -o <output>
+* The two commands below do the same thing. *
+>> python calculate_score.py -g -m result/worlddrug_rnn/ -t FDA -o <output>
+>> python calculate_score.py -g -m result/worlddrug_rnn/ -t ../data/test/FDA.smi -o <output>
 """
 
 TEST_FILE_LIST = {
@@ -30,27 +32,33 @@ TEST_FILE_LIST = {
     'fda': '../data/test/fda.smi',
     'gdb17': '../data/test/gdb17.smi',
     'invest': '../data/test/investigation.smi',
-    'zinc': '../data/test/zinc.smi',
+    'investigation': '../data/test/investigation.smi',
+    'zinc15': '../data/test/zinc15.smi',
 }
 
 parser = ArgumentParser(description='Calculate Drug-likeness With Model')
 parser.add_argument('-g', '--gpu', dest='cuda', action='store_true', help='use device CUDA, default')
 parser.add_argument('-c', '--cpu', dest='cuda', action='store_false', help='use device CPU')
-parser.set_defaults(condition=True)
+parser.set_defaults(cuda=True)
 parser.add_argument('-m', '--model', required=True, type=str, help='model path')
-parser.add_argument('-t', '--test_file', required=True, type=str, help='test file path')
+parser.add_argument('-t', '--test_file', type=str, help='test file path', default = None)
+parser.add_argument('-s', '--smiles', type=str, help='test smiles', default = None)
 parser.add_argument('-o', '--output', type=str, help='output file. default is STDOUT', default='stdout')
 args = parser.parse_args()
 
 # Set up
-model_path = args.model
-test_file = TEST_FILE_LIST.get(test_file, test_file)
-device = 'cuda:0' if args.cuda else 'cpu'
+assert (args.test_file or args.smiles), "Neither TEST_FILE nor SMILES exist."
+if args.test_file != None :
+    test_file = TEST_FILE_LIST.get(args.test_file, args.test_file)
+    with open(test_file) as f :
+        test_smiles = [l.strip() for l in f.readlines()]
+else :
+    test_smiles = [args.smiles]
+
+device = "cuda:0" if args.cuda else 'cpu'
 output_file = args.output
 
-with open(test_file) as f :
-    test_smiles = [l.strip() for l in f.readlines()]
-
+model_path = args.model
 model_config_file = os.path.join(model_path, 'config.yaml')
 config = OmegaConf.load(model_config_file)
 model_architecture = config.model.model # RNNLM or GCNModel
@@ -73,4 +81,4 @@ else :
 # Run
 for smiles in test_smiles :
     score = model.test(smiles)
-    logging.info(f'{smiles}\t{score:.3f}')
+    logging.info(f'{smiles},{score:.3f}')

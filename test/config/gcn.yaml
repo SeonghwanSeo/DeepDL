@@ -1,8 +1,8 @@
-name: gcn_worlddrug_zinc
+name: gcn_worlddrug_zinc15
 #================================
 data:
     positive_file: ../data/train/worlddrug.smi
-    negative_file: ../data/train/zinc.smi
+    negative_file: ../data/train/zinc15.smi
     shuffle: true
 #======= Hyperparameters ========
 model:

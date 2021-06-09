@@ -17,7 +17,8 @@ If you have any problems or need help with the code, please add an issue or cont
   - [RNNLM](#rnnlm)
   - [GCN](#gcn)
 - [Test](#test)
-- [Research](#research)
+  - [Scoring](#scoring)
+  - [Research](#research)
 
 ## Environment
 
@@ -161,6 +162,8 @@ train.epoch=200
 
 ## Test
 
+### Scoring
+
 After model training is complete, you can calculate the score of a given molecule using the model method `load_model` and `test`.
 
 ```Python
@@ -182,17 +185,19 @@ class Model(~~) :
 """
 ```
 
-`calculate_score.py` is a simple test script I used for our study. It does not support parallel computation.
+`calculate_score.py` is a simple test script I used for our study. It does not support parallel computation. You can choose model with the argument MODEL     (`-m`, `--model`), and you also use QED architecture for scoring theorem with `-m QED`, instead of Deep learning model. 
 
 ```bash
+python calculate_score.py -m 'QED' -t '../data/test/chembl.smi' -o <output>
+
 python calculate_score.py -m 'result/rnn_worlddrug' -t '../data/test/fda.smi' -o <output>
 
 python calculate_score.py -c -m 'result/rnn_worlddrug' -s 'c1ccccc1'
-#output
+# output
 c1ccccc1,85.605
 
 python calculate_score.py -m 'result/gcn_worlddrug_zinc15' -t 'gdb17'
-#output
+# output
 CC12CCC34CC(N)CN3C=NC14CNC2=N,1.000
 CC12C(O)CNC13C1CC(N1)C23,1.000
 CC12CC3COC(=O)C3OC1CCNC2CN,1.000
@@ -212,7 +217,7 @@ optional arguments:
   -g, --gpu             use device CUDA, default
   -c, --cpu             use device CPU
   -m MODEL, --model MODEL
-                        model path
+                        model path or model architecture(QED)
   -t TEST_FILE, --test_file TEST_FILE
                         test file path
   -s SMILES, --smiles SMILES
@@ -221,6 +226,6 @@ optional arguments:
                         output file. default is STDOUT
 ```
 
-## Research
+### Research
 
 TODO

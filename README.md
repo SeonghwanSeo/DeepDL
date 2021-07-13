@@ -1,7 +1,7 @@
 # Drug-likeness scoring based on unsupervised learning
 
 github for *Drug-likeness scoring based on unsupervised learning*
-by Kyunghoon Lee, Jinho Jang, and Seonghwan Seo.
+by Kyunghoon Lee, Jinho Jang, Seonghwan Seo, Jaechang Lim, and Woo Youn Kim.
 
 After submitting the paper, I modified the code for readability and convenient use. The seed value may change during this process, which may change the result. If you would like to receive model weights file used in our paper, contact us. (RNNLM: ~100MB, GCN: ~550KB)
 

@@ -24,7 +24,7 @@ def main(datafile, outputfile, max_size, cpus) :
                 break
 
 def filtering(line) :
-    _, smiles = line.strip().split('\t')
+    smiles = line.strip().split('\t')[-1]
     mol = Chem.MolFromSmiles(smiles)
     if mol is not None :
         try :

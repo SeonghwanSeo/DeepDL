@@ -9,6 +9,7 @@ from pathlib import Path
 from omegaconf import OmegaConf
 
 from . import data_utils as DATA_UTILS
+from .loader import *
 
 def exp_manager(cfg, exp_dir='result') :
     save_dir = os.path.join(exp_dir, cfg.name)
@@ -52,27 +53,3 @@ def set_cuda_visible_device(ngpus):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     return device
-
-def load_rnn_data(data_config):
-    #model: both model class and model object
-    with open(data_config['positive_file']) as f : 
-        train_data = f.readlines()
-        train_data = [s.strip().split('\t')[-1] for s in train_data]
-    return np.array(train_data)
-
-def load_gcn_data(data_config):
-    with open(data_config['positive_file']) as f :
-        pos_file = f.readlines()
-    with open(data_config['negative_file']) as f :
-        neg_file = f.readlines()
-    
-    train_data = []
-    for smiles in pos_file:
-        train_data.append((smiles.strip().split('\t')[-1], 1))
-    for smiles in neg_file:
-        train_data.append((smiles.strip().split('\t')[-1], 0))
-    
-    if data_config['shuffle'] :
-        random.shuffle(train_data)
-        
-    return np.array(train_data)

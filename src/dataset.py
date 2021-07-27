@@ -61,19 +61,17 @@ class SmilesDataset(Dataset):
 
 #============ Dataset class for Graph ==========#
 class GraphDataset(Dataset):
-    def __init__(self, data_list):
+    def __init__(self, data):
         self.feature_list = []
         self.num_atom_list = []
         self.adj_list = []
-        self.__process(data_list)
+        smiles_list, label_list = data
+        self.label_list = torch.from_numpy(label_list)
+        self.__process(smiles_list)
 
-    def __process(self, data_list):
-        label_list = []
+    def __process(self, smiles_list):
         num_atom_list = []
-        for data in data_list:
-            smiles = data[0]
-            label = data[1]
-            label_list.append(int(label))
+        for smiles in smiles_list:
             mol = Chem.MolFromSmiles(smiles)
             n = mol.GetNumAtoms()
             adj = DATA_UTILS.get_adj(mol)
@@ -82,7 +80,6 @@ class GraphDataset(Dataset):
             self.adj_list.append(adj)
             self.feature_list.append(feature)
         self.num_atom_list = np.array(num_atom_list)
-        self.label_list = torch.from_numpy(np.array(label_list))
 
     def __getitem__(self,idx):
         sample = dict()
@@ -122,3 +119,19 @@ class GraphDataset(Dataset):
         return sample
 
 #===================================#
+"""
+#============ Dataset class for RDKit Desc ==========#
+class RDKitDataset(Dataset):
+    def __init__(self, train_data, desc, mean, std):
+        train_data, self.answer = train_data
+        self.train_data = (train_data[desc] - mean)/std
+
+    def __len__(self) :
+        return len(self.train_data)
+
+    def __getitem__(self, idx):
+        sample = dict()
+        sample['X'] = self.train_data[idx]
+        sample['Y'] = self.answer[idx]
+        return sample
+"""

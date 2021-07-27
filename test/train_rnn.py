@@ -9,6 +9,7 @@ import logging
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), 'src'))
 from models import RNNLM
 import utils as UTILS
+from utils.train_utils import train_without_validation_test
 from utils.hydra_runner import hydra_runner
 
 torch.manual_seed(42)
@@ -42,39 +43,9 @@ def main(cfg) :
     
     #============= Train ========#
     logging.info("============== Train Start ==============\n")
-    train_model(model, whole_data, train_params, data_config, save_file, device)
+    train_without_validation_test(model, whole_data, train_params, data_config, save_file, device)
     logging.info(f"save file  : {save_file}\n")
 
-#============= Train model with a train/val data pair ========================#
-def train_model(model, whole_data, train_params, data_config, save_file, device):
-    """
-    Unlike TCC, the definition of validation loss in distribution learning is ambiguous.
-    Therefore, we do not perform validation test during training RNNLM.
-    """
-    train_data = whole_data
-    logging.info(f"number of train_set : {len(train_data)}\n")
-
-    #============ Construct Dataloader ===========#
-    batch_size = train_params.batch_size
-    num_workers = train_params.num_workers
-    max_epoch = train_params.epoch
-    train_dataloader, _ = model.construct_dataloader(train_data, None, batch_size, num_workers)
-    
-    #============ Train model ===============#
-    model = model.initialize_model(device, train_params.init_weight)
-    optimizer = torch.optim.Adam(model.parameters(), lr=train_params['lr'])
-    logging.info("epoch | tloss  | time")
-    
-    for epoch in range(max_epoch) :
-        st = time.time()
-        train_loss, _ = model.train_epoch(train_dataloader, None, optimizer, gradient_clip_val=1.0)
-        for param_group in optimizer.param_groups :
-            param_group['lr'] = train_params.lr * (train_params.lr_decay ** epoch)
-        
-        end = time.time()
-        logging.info(f"{epoch:<5d} |{train_loss:7.4f} | {end-st:.2f}")
-    
-    model.save_model(save_file)
 
 if __name__ == '__main__' :
     main()

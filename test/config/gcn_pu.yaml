@@ -2,7 +2,7 @@ name: gcn_worlddrug_zinc15
 #================================
 data:
     positive_file: ../data/train/worlddrug.smi
-    negative_file: ../data/train/zinc15.smi
+    negative_file: ../data/train/zinc15_.smi
 #======= Hyperparameters ========
 model:
     model: GCNModel
@@ -23,3 +23,9 @@ train:
     epoch: 1000
     gpus: 1
     num_workers: 0
+#================================
+pu_learning:
+    architecture: 'Fusilier'    # btw 'Fusilier' or 'Liu'
+    max_iterations: 100
+    threshold: 0.1
+    output_file: ../data/train/zinc15_pu.smi

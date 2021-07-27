@@ -12,6 +12,7 @@ model:
     stereo: true
 #================================
 train:
+    sampler: null
     init_weight: null #<pre-trained model>
     lr: 0.0001
     lr_decay: 0.99

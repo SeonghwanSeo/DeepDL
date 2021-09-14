@@ -5,6 +5,7 @@ import logging
 from omegaconf import OmegaConf
 from rdkit import Chem
 from rdkit.Chem.Descriptors import qed
+from pathlib import Path
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), 'src'))
 from models import RNNLM, GCNModel
@@ -24,8 +25,9 @@ root/
 example: 
 >> python calculate_score.py -g -m result/worlddrug_rnn/ -t FDA -o <output>
 
-ii) When the argument MODEL is QED, we use QED scoring theorem.
+ii) When the argument MODEL is QED or qed, we use QED scoring theorem.
 --model=QED
+--model=qed
 
 example: 
 >> python calculate_score.py -c -m QED -t ../data/test/fda.smi -o <output>
@@ -81,6 +83,7 @@ Logger.setLevel(logging.INFO)
 if output_file == 'stdout' :
     Logger.addHandler(logging.StreamHandler())
 else :
+    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     Logger.addHandler(logging.FileHandler(output_file, 'w'))
 
 if args.model == 'QED' or args.model == 'qed' :

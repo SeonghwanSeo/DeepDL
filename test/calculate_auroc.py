@@ -27,7 +27,7 @@ python calculate_auroc.py -d <score_dir> -p fda -n chembl zinc15 gdb17
 
 def broadcast (score_dir, score_dir_list, name) :
     if name in score_dir_list :
-        return os.path.join(score_dir, name)
+        return [(name, os.path.join(score_dir, name))]
     else :
         filelist = [f for f in score_dir_list if name.lower() in f.lower()]
         assert len(filelist) > 0, \

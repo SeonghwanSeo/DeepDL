@@ -125,6 +125,8 @@ Both RNNLM and GCN, config, log, and model parameters will be saved in `<root>/t
 
 In gcn learning, you can choose between two validation test mode, normal validation test (`val`) and 5 fold cross-validation test (`5cv`). Default is 5 fold cross-validation test mode, which is used in our paper. Config file is `config/gcn.yaml`
 
+Because of using ParameterList Class of PyTorch, multi-gpu is not supported.
+
 ```bash
 # Two-class classification model with Worlddrug as positive set and ZINC as negative set.
 python -u train_gcn.py \
@@ -132,8 +134,8 @@ name='gcn_worlddrug_zinc15' \
 data.positive_file=../data/train/worlddrug.smi \
 data.negative_file=../data/train/zinc15.smi \
 train.batch_size=100 \
-train.valid_mode='5cv' \
-train.gpus=<gpus> \
+train.val_mode='5cv' \
+train.gpus=1 \
 train.num_workers=<num-workers> \
 train.epoch=200 # recommend.
 
@@ -143,8 +145,8 @@ name='rnn_worlddrug_chembl' \
 data.positive_file=../data/train/worlddrug.smi \
 data.negative_file=../data/train/chembl.smi \
 train.batch_size=100 \
-train.valid_mode='5cv' \
-train.gpus=<gpus> \
+train.val_mode='5cv' \
+train.gpus=1 \
 train.num_workers=<num-workers> \
 train.epoch=200
 
@@ -154,8 +156,8 @@ name='rnn_worlddrug_chembl' \
 data.positive_file=../data/train/worlddrug.smi \
 data.negative_file=../data/train/gdb17.smi \
 train.batch_size=100 \
-train.valid_mode='5cv' \
-train.gpus=<gpus> \
+train.val_mode='5cv' \
+train.gpus=1 \
 train.num_workers=<num-workers> \
 train.epoch=200
 ```

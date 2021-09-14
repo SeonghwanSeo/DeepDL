@@ -19,7 +19,8 @@ ex) <score_dir>/ => fda.csv, chembl.csv, zinc15.csv, gdb17.csv, GDB17.csv
     - label 'gdb17.csv' uses 'gdb17.csv'    (Find the exact same name)
     - label 'FDA' uses 'fda.csv'            (Use similar name)
     - label 'chembl' uses 'chembl.csv'      (Use similar name)
-    - label 'gdb17' => ERROR.               (There are two files, gdb17.csv, GDB17.csv)
+#    - label 'gdb17' => ERROR.               (There are two files, gdb17.csv, GDB17.csv)
+    - label 'gdb17' => 'gdb17.csv', 'GDB17.csv'
 General command
 python calculate_auroc.py -d <score_dir> -p fda -n chembl zinc15 gdb17
 """
@@ -31,9 +32,10 @@ def broadcast (score_dir, score_dir_list, name) :
         filelist = [f for f in score_dir_list if name.lower() in f.lower()]
         assert len(filelist) > 0, \
             f"Fail to broadcast '{name}' in '{args.score_dir}': NO FILE"
-        assert len(filelist) == 1, \
-            f"Fail to broadcast '{name}' in '{args.score_dir}': TOO MANY FILE - {str(filelist)[1:-1]}"
-        return os.path.join(score_dir, filelist[0])
+        #assert len(filelist) == 1, \
+        #    f"Fail to broadcast '{name}' in '{args.score_dir}': TOO MANY FILE - {str(filelist)[1:-1]}"
+        filelist.sort()
+        return [(f, os.path.join(score_dir, f)) for f in filelist]
 
 def compute_auroc (pos, neg) :
     true_list = np.array([1 for _ in range(len(pos))] + [0 for _ in range(len(neg))])
@@ -57,25 +59,32 @@ neg_set = {}
 score_dir_list = []
 if args.score_dir :
     score_dir_list = os.listdir(args.score_dir)
-    
+
+pos_list = [] 
+neg_list = []
+
 for p in args.positive :
     if args.score_dir :
-        file_path = broadcast(args.score_dir, score_dir_list, p)
+        file_paths = broadcast(args.score_dir, score_dir_list, p)
     else :
-        file_path = p
-    data = pd.read_csv (file_path, index_col = False, names = ['SMILES', 'score'])
-    pos_set[p] = data.score.tolist()
+        file_paths = [(p, p)]
+    for fn, file_path in file_paths :
+        pos_list.append(fn)
+        data = pd.read_csv (file_path, index_col = False, names = ['SMILES', 'score'])
+        pos_set[fn] = data.score.tolist()
 
 for n in args.negative :
     if args.score_dir :
-        file_path = broadcast(args.score_dir, score_dir_list, n)
+        file_paths = broadcast(args.score_dir, score_dir_list, n)
     else :
-        file_path = n
-    data = pd.read_csv (file_path, index_col = False, names=['SMILES', 'score'])
-    neg_set[n] = data.score.tolist()
+        file_paths = [(n, n)]
+    for fn, file_path in file_paths :
+        neg_list.append(fn)
+        data = pd.read_csv (file_path, index_col = False, names = ['SMILES', 'score'])
+        neg_set[fn] = data.score.tolist()
 
 # Print AUROC score
-for p in args.positive :
-    for n in args.negative :
+for p in pos_list :
+    for n in neg_list :
         auroc = compute_auroc (pos_set[p], neg_set[n])
-        print(f'{p}\t{n}\t{auroc:.3f}')
+        print(f'{p}\t{n}\t{auroc:.4f}')

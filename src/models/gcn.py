@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 import os
 import sys
 import types
@@ -76,8 +77,14 @@ class GCNModel(DefaultModel):
         assert mol is not None
         device = self.device
         self.eval()
-        af = torch.from_numpy(get_atom_feature(mol)).to(device).float()
-        adj = torch.from_numpy(get_adj(mol)).to(device).float()
+        num_atoms = mol.GetNumAtoms()
+        af = np.zeros((100,31))
+        af[:num_atoms,:] = get_atom_feature(mol)
+        adj = np.zeros((100,100))
+        adj[:num_atoms,:num_atoms] = get_adj(mol)
+
+        af = torch.from_numpy(af).to(device).float()
+        adj = torch.from_numpy(adj).to(device).float()
         af, adj = af.unsqueeze(0), adj.unsqueeze(0)
         y_pred = self(af, adj)
         return float(self.forward(af, adj).item())

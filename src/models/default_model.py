@@ -1,10 +1,18 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 import numpy as np
 import types
 from omegaconf import OmegaConf
 import os
+
+def construct_balanced_sampler(answer) :
+    n_total = len(answer)
+    n_true = int(sum(answer))
+    n_false = n_total - n_true
+    n_sample = 2 * min(n_true, n_false)
+    weights = np.where(answer == 1, 1/n_true, 1/n_false)
+    return WeightedRandomSampler(weights, n_sample)
 
 class DefaultModel(nn.Module) :
     #Static attribute
@@ -39,6 +47,8 @@ class DefaultModel(nn.Module) :
                 else:
                     nn.init.xavier_normal_(param)
         
+        if hasattr(self, '_training_step') : return self
+
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(self)
             model.device = device
@@ -54,12 +64,21 @@ class DefaultModel(nn.Module) :
     def construct_dataset(self, data) :
         pass
 
-    def construct_dataloader(self, train_data, val_data, batch_size, num_workers) :
-        train_dataset = self.construct_dataset(train_data)
-        collate_fn = train_dataset.collate_fn
-        train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers, collate_fn=collate_fn)
+    def construct_dataloader(self, train_data, val_data, batch_size, num_workers, sampler = None) :
+        if train_data is not None :
+            train_dataset = self.construct_dataset(train_data)
+            collate_fn = getattr(train_dataset, 'collate_fn', None)
+            if sampler == 'balanced' :
+                sampler = construct_balanced_sampler(train_data[1])
+                train_dataloader = DataLoader(train_dataset, batch_size, num_workers=num_workers, collate_fn=collate_fn, sampler = sampler)
+            else :
+                train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers, collate_fn=collate_fn, sampler = sampler)
+        else :
+            train_dataloader = None
+
         if val_data is not None :
             val_dataset = self.construct_dataset(val_data)
+            collate_fn = getattr(val_dataset, 'collate_fn', None)
             val_dataloader = DataLoader(val_dataset, batch_size, shuffle=False, num_workers=num_workers, collate_fn=collate_fn)
         else :
             val_dataloader = None
@@ -110,6 +129,15 @@ def default_trainer(model) :
             val_loss = None
 
         return train_loss, val_loss
+
+    @torch.no_grad()
+    def test_samples(self, test_dataloader) :
+        self.eval()
+        y_pred_list = []
+        for sample in test_dataloader :
+            y_pred, _ = self._step(sample)
+            y_pred_list.append(y_pred)
+        return torch.cat(y_pred_list, dim=0).cpu().numpy()
     
     def save_model(self, save_file) :
         """
@@ -117,13 +145,15 @@ def default_trainer(model) :
         Due to torch.save() save the Paralleled model(nn.DataParallel) when we trained the model in multi-gpu environment,
         we define save_model().
         """
-        if torch.cuda.device_count() > 1:
-            torch.save(self.module.state_dict(), save_file)
-        else:
-           torch.save(self.state_dict(), save_file)
+        if save_file is not None :
+            if torch.cuda.device_count() > 1:
+                torch.save(self.module.state_dict(), save_file)
+            else:
+               torch.save(self.state_dict(), save_file)
 
     model._training_step = types.MethodType(_training_step, model)
     model._validation_step = types.MethodType(_validation_step, model)
     model.train_epoch = types.MethodType(train_epoch, model)
     model.save_model = types.MethodType(save_model, model)
+    model.test_samples = types.MethodType(test_samples, model)
     return model

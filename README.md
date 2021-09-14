@@ -172,7 +172,7 @@ Both RNNLM and GCN, config, log, and model parameters will be saved in `<root>/t
 
 As an additional work, we applied PU learning to minimize false negatives in the negative set. The results of this work are in the Supplementary Information. In this study, we only used the [Fusilier work](#https://www.sciencedirect.com/science/article/abs/pii/S0306457314001095), but the algorithm proposed by [Liu](#https://ieeexplore.ieee.org/abstract/document/1250918) was also implemented. GCN model was used as the classification model architecture for PU learning. During PU learning, the size of the negative set starts at 10000 and decreases until it becomes smaller than the size of the positive set (WorldDrug, 2833 molecules). Config file is `config/gcn_pu.yaml`
 
-~bash
+```bash
 # PU learning with Worlddrug as positive set and ZINC15 as negative set.
 python -u train_pu_gcn.py \
 name='gcn_pu_worlddrug_zinc15_fusilier' \
@@ -185,21 +185,21 @@ train.num_workers=<num-workers> \
 train.epoch=200 \ # recommend.
 pu_learning.architecture='Fusilier' \ # 'Fusilier' or 'Liu'
 pu_learning.threshold=0.2
-~
+```
 
 After PU Learning, the refined negative set is stored for each iteration. In general, use the negative set file of the last iteration.
 
 ```bash
 ├── test/result/gcn_pu_worlddrug_zinc15_fusilier/
-        ├── config.yaml     # Model Hyperparameter
-        ├── output.log      # Training Log
-        ├── iteration_0/    # After the first iteration
-    │       ├── negative.smi
-    │       └── save.pt
-        ├── iteration_1/    # After the second iteration
-    │       ├── negative.smi
-    │       └── save.pt
-      ...
+    ├── config.yaml     # Model Hyperparameter
+    ├── output.log      # Training Log
+    ├── iteration_0/    # After the first iteration
+    │   ├── negative.smi
+    │   └── save.pt
+    ├── iteration_1/    # After the second iteration
+    │   ├── negative.smi
+    │   └── save.pt
+    ...
 ```
 
 After PU learning is finished, train again with the GCN model. In training, we used only 2,833 molecules (size of the positive set) among the refined negative set.
@@ -284,5 +284,37 @@ optional arguments:
 ```
 
 ### Research
+
+#### AUROC
+
+We provided the simple script to measure the classification performance, AUROC. Run this script after scoring is complete.
+
+```bash
+python calculate_auroc.py -d 'score/rnn_worlddrug/' -p fda -n gdb17 zinc15 chembl
+# output (Due to the difference in seeds, it is different from the results of paper.)
+fda.csv	gdb17.csv	0.9681
+fda.csv	zinc15.csv	0.9297
+fda.csv	chembl.csv	0.8103
+```
+
+Argument List.(Ignore argument `OUTPUT`. Not implemented yet)
+
+```
+usage: calculate_auroc.py [-h] [-d SCORE_DIR] [-p POSITIVE [POSITIVE ...]]
+                          [-n NEGATIVE [NEGATIVE ...]] [-o OUTPUT]
+
+Calculation AUROC score
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d SCORE_DIR, --score_dir SCORE_DIR
+                        score file directory path
+  -p POSITIVE [POSITIVE ...], --positive POSITIVE [POSITIVE ...]
+                        positive(drug) set list
+  -n NEGATIVE [NEGATIVE ...], --negative NEGATIVE [NEGATIVE ...]
+                        negative(non-drug-like) set list
+  -o OUTPUT, --output OUTPUT # TODO
+                        ROC graph output path(matplotlib required) 
+```
 
 TODO

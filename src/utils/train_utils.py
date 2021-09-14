@@ -43,11 +43,11 @@ def train_with_validation_test(model, whole_data, train_params, save_file, devic
 
 #============= Train model with a 5cv mode ========================#
 def train_with_5cv(model, whole_data, train_params, save_file, device):
-    data, answer = whole_data
+    data, answer = whole_data[0].copy(), whole_data[1].copy()
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
     logging.info('5-fold cross validation test') 
-    logging.info(f"number of train_set : {len(data)}")
+    logging.info(f"number of train_set : {len(data)}\n")
     
     batch_size = train_params.batch_size
     num_workers = train_params.num_workers
@@ -59,7 +59,7 @@ def train_with_5cv(model, whole_data, train_params, save_file, device):
     total_val_loss_list = [0 for _ in range(max_epoch)]
     overfit_cnt = 0
 
-    logging.info("============== Train Start ==============\n")
+    logging.info("============== Train Start ==============")
     for train_idx, val_idx in kf.split(data, answer):
         logging.info(f"\n============== Fold {fold}/5 Start ==============\n")
         #============ Construct Dataloader ===========#
@@ -112,8 +112,8 @@ def train_with_5cv(model, whole_data, train_params, save_file, device):
     
     for epoch in range(best_epoch) :
         st = time.time()
+        train_loss, _ = model.train_epoch(train_dataloader, None, optimizer, gradient_clip_val=1.0)
         for param_group in optimizer.param_groups :
-            train_loss, _ = model.train_epoch(train_dataloader, None, optimizer, gradient_clip_val=1.0)
             param_group['lr'] = train_params.lr * (train_params.lr_decay ** epoch)
     
         end = time.time()

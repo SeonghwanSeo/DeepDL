@@ -17,7 +17,7 @@ def main(datafile, outputfile, max_size, cpus) :
     t = 0
     with open(outputfile, 'w') as w :
         for smiles in smiles_list :
-            if smiles is not None :
+            if smiles is not None and len(smiles) > 0 :
                 w.write(smiles + '\n')
                 t += 1
             if t == max_size :

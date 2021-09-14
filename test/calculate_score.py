@@ -83,7 +83,7 @@ if output_file == 'stdout' :
 else :
     Logger.addHandler(logging.FileHandler(output_file, 'w'))
 
-if args.model == 'QED' :
+if args.model == 'QED' or args.model == 'qed' :
     model = QED_model()
 else :
     model_path = args.model

@@ -119,19 +119,3 @@ class GraphDataset(Dataset):
         return sample
 
 #===================================#
-"""
-#============ Dataset class for RDKit Desc ==========#
-class RDKitDataset(Dataset):
-    def __init__(self, train_data, desc, mean, std):
-        train_data, self.answer = train_data
-        self.train_data = (train_data[desc] - mean)/std
-
-    def __len__(self) :
-        return len(self.train_data)
-
-    def __getitem__(self, idx):
-        sample = dict()
-        sample['X'] = self.train_data[idx]
-        sample['Y'] = self.answer[idx]
-        return sample
-"""

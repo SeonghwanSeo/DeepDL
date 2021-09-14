@@ -32,7 +32,7 @@ def main(cfg) :
     
     #============ Setup ============#
     model_params.input_size = INPUT_SIZE
-    save_file = UTILS.exp_manager(cfg)
+    save_dir, _ = UTILS.exp_manager(cfg)
 
     #============ Set Device ============#
     device = UTILS.set_cuda_visible_device(train_params.gpus)
@@ -47,13 +47,10 @@ def main(cfg) :
     #============= PU_Learning ========#
     assert pu_params.architecture in ['Fusilier', 'Liu']
     if pu_params.architecture == 'Fusilier' :
-        pu_module = PU_Fusilier_Module(model, whole_data, train_params, pu_params, save_file, device)
+        pu_module = PU_Fusilier_Module(model, whole_data, train_params, pu_params, save_dir, device)
     elif pu_params.architecture == 'Liu' :
-        pu_module = PU_Liu_Module(model, whole_data, train_params, pu_params, save_file, device)
-    logging.info(f"save file  : {save_file}\n")
-    real_neg_file = pu_module.run().tolist()
-    with open(pu_params.output_file, 'w') as w :
-        w.write('\n'.join(real_neg_file))
+        pu_module = PU_Liu_Module(model, whole_data, train_params, pu_params, save_dir, device)
+    pu_module.run()
 
 if __name__ == '__main__' :
     main()

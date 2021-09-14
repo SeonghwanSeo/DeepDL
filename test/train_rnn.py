@@ -29,7 +29,7 @@ def main(cfg) :
     
     #============ Setup ============#
     model_params.input_size = INPUT_SIZE
-    save_file = UTILS.exp_manager(cfg)
+    save_dir, save_file = UTILS.exp_manager(cfg)
 
     #============ Set Device ============#
     device = UTILS.set_cuda_visible_device(train_params.gpus)

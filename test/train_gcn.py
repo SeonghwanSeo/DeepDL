@@ -13,7 +13,7 @@ import utils as UTILS
 from utils.train_utils import train_with_validation_test, train_with_5cv
 from utils.hydra_runner import hydra_runner
 
-seed = 5
+seed = 0
 torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 np.random.seed(seed)
@@ -31,7 +31,7 @@ def main(cfg) :
     
     #============ Setup ============#
     model_params.input_size = INPUT_SIZE
-    save_file = UTILS.exp_manager(cfg)
+    save_dir, save_file = UTILS.exp_manager(cfg)
 
     #============ Set Device ============#
     device = UTILS.set_cuda_visible_device(train_params.gpus)

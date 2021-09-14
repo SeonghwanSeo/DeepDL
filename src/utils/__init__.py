@@ -26,7 +26,7 @@ def exp_manager(cfg, exp_dir='result') :
     with open(conf_file, 'w') as w :
         OmegaConf.save(config=cfg, f=w, resolve=True)
 
-    return save_file
+    return save_dir, save_file
 
 def set_cuda_visible_device(ngpus):
     """

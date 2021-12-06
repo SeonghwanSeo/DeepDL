@@ -1,0 +1,18 @@
+name: rnn_pubchem_worlddrug
+data:
+  positive_file: ../data/train/worlddrug.smi
+model:
+  model: RNNLM
+  input_size: 66
+  hidden_size: 1024
+  n_layers: 4
+  dropout: 0.2
+  stereo: true
+train:
+  init_weight: result/rnn_pubchem/save.pt
+  lr: 0.0001
+  lr_decay: 0.99
+  batch_size: 100
+  epoch: 100
+  gpus: 1
+  num_workers: 1

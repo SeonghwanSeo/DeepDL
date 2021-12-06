@@ -47,9 +47,13 @@ class GraphAttention(nn.Module):
             _A = self.attn_matrix(_h, adj, self.attn[i]) 
             _h = self.relu(torch.matmul(_A, _h))
             input_tot.append(_h)
+
+        # Concatenation
         _h = self.relu(torch.cat(input_tot, 2))
         _h = self.A(_h)
 
+        # Fully Connected
+        _h = self.dropout(_h)
         h = self.fc(h)
 
         num_atoms = h.size(1)

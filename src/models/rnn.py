@@ -30,6 +30,23 @@ class RNNLM(DefaultModel) :
         self.trainer = rnnlm_trainer    #See below. Wrapper
         self.stereo = params['stereo']
 
+    @classmethod
+    def load_model(cls, model_path, map_location = 'cpu') :
+        import os
+        from omegaconf import OmegaConf
+        parameter_path = os.path.join(model_path, 'save.pt')
+        config_path = os.path.join(model_path, 'config.yaml')
+        config = OmegaConf.load(config_path)
+        model_params = config.model
+        model = cls(model_params)
+        try :
+            model.initialize_model(map_location, parameter_path)
+        except :
+            model.start_codon = nn.Parameter(model.start_codon.view(-1))
+            model.initialize_model(map_location, parameter_path)
+            model.start_codon = nn.Parameter(model.start_codon.view(1,1,-1), requires_grad=True)
+        return model
+
     def forward(self, x) :
         #================= Encoder ===================#
         self.GRU.flatten_parameters()

@@ -64,6 +64,7 @@ class GCNModel(DefaultModel):
         Y = self.dropout(Z)
         Y = self.decoder(Y)                 # [N, F2] => [N, F2]
         Y = self.relu(Y)
+        Y = self.dropout(Y)
         Y = self.classifier(Y)              # [N, F2] => [N, 1]
         Y = torch.sigmoid(Y)                # convert logit to probability (btw 0 to 1)
         return Y

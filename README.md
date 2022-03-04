@@ -316,5 +316,3 @@ optional arguments:
   -o OUTPUT, --output OUTPUT # TODO
                         ROC graph output path(matplotlib required) 
 ```
-
-TODO

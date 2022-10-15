@@ -9,6 +9,16 @@ https://drive.google.com/drive/folders/1H3G1Y8ynyly485QtrqyWnUfseSzHaC6I?usp=sha
 
 If you have any problems or need help with the code, please add an issue or contact shwan0106@kaist.ac.kr.
 
+### Issue
+
+Our script could not read the character 'X'. Please filter out the molecules that contain Xe atoms.
+
+### Recommend (Retraining)
+
+Although we set the hidden dimension of RNNLM to 1024 in paper, I recommend using a smaller dimension. (256, 512, ...)
+
+You can add 'X' character in `src/utils/data_utils/smiles_utils.py` if you want to use Xe atom. 
+
 ## Table of Contents
 
 - [Environment](#environment)

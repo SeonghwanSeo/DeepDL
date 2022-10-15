@@ -13,7 +13,7 @@ If you have any problems or need help with the code, please add an issue or cont
 
 Our script could not read the character 'X'. Please filter out the molecules that contain Xe atoms.
 
-### Recommend (Retraining)
+### Recommend (Training)
 
 Although we set the hidden dimension of RNNLM to 1024 in paper, I recommend using a smaller dimension. (256, 512, ...)
 

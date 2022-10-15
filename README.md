@@ -4,6 +4,8 @@ github for *Drug-likeness scoring based on unsupervised learning*
 by Kyunghoon Lee, Jinho Jang, Seonghwan Seo, Jaechang Lim, and Woo Youn Kim.
 
 After submitting the paper, I modified the code for readability and convenient use. The seed value may change during this process, which may change the result. All model weights used in paper are accessible at `test/result` (RNNLM: ~100MB, GCN: ~550KB)
+If there is any problem using the weight file, download the pre-trained file from following link. Our main RNNLM model is uploaded.
+https://drive.google.com/drive/folders/1H3G1Y8ynyly485QtrqyWnUfseSzHaC6I?usp=sharing
 
 If you have any problems or need help with the code, please add an issue or contact shwan0106@kaist.ac.kr.
 

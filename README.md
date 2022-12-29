@@ -15,7 +15,7 @@ python test/calculate_score.py -c -m 'test/result/rnn_worlddrug' -s 'c1ccccc1'
 # output: c1ccccc1,86.493
 ```
 * `86.493` is the predicted score. The higher the predicted value is, the higher druglikeness is. 
-* [See below for more details](##Test)
+* [See below for more details](#test)
 
 
 ### Issue

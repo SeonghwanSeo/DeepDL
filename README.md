@@ -9,6 +9,15 @@ https://drive.google.com/drive/folders/1H3G1Y8ynyly485QtrqyWnUfseSzHaC6I?usp=sha
 
 If you have any problems or need help with the code, please add an issue or contact shwan0106@kaist.ac.kr.
 
+### TL;DR
+```
+python test/calculate_score.py -c -m 'test/result/rnn_worlddrug' -s 'c1ccccc1'
+# output: c1ccccc1,86.493
+```
+* `86.493` is the predicted score. The higher the predicted value is, the higher druglikeness is. 
+* [See below for more details](##Test)
+
+
 ### Issue
 
 Our script could not read the character 'X'. Please filter out the molecules that contain Xe atoms.

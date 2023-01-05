@@ -17,7 +17,19 @@ python test/calculate_score.py -c -m 'test/result/rnn_worlddrug' -s 'c1ccccc1'
 * `86.493` is the predicted score. The higher the predicted value is, the higher druglikeness is. 
 * [See below for more details](#test)
 
-
+### Citation
+```
+@article{lee2022drug,
+  title={Drug-likeness scoring based on unsupervised learning},
+  author={Lee, Kyunghoon and Jang, Jinho and Seo, Seonghwan and Lim, Jaechang and Kim, Woo Youn},
+  journal={Chemical science},
+  volume={13},
+  number={2},
+  pages={554--565},
+  year={2022},
+  publisher={Royal Society of Chemistry}
+}
+```
 ### Issue
 
 Our script could not read the character 'X'. Please filter out the molecules that contain Xe atoms.

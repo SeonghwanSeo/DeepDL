@@ -1,11 +1,44 @@
 # Drug-likeness scoring based on unsupervised learning
 
-github for *Drug-likeness scoring based on unsupervised learning*
-by Kyunghoon Lee, Jinho Jang, Seonghwan Seo, Jaechang Lim, and Woo Youn Kim.
+Official github for [Drug-likeness scoring based on unsupervised learning](https://pubs.rsc.org/en/content/articlehtml/2022/sc/d1sc05248a)
+by Kyunghoon Lee*, Jinho Jang*, Seonghwan Seo*, Jaechang Lim, and Woo Youn Kim. (*Chemical Science*)
 
-After submitting the paper, I modified the code for readability and convenient use. The seed value may change during this process, which may change the result. If you would like to receive model weights file used in our paper, contact us. (RNNLM: ~100MB, GCN: ~550KB)
+After submitting the paper, I modified the code for readability and convenient use. The seed value may change during this process, which may change the result. All model weights used in paper are accessible at `test/result` (RNNLM: ~100MB, GCN: ~550KB)
+If there is any problem using the weight file, download the pre-trained file from following link. Our main RNNLM model is uploaded.
+https://drive.google.com/drive/folders/1H3G1Y8ynyly485QtrqyWnUfseSzHaC6I?usp=sharing
 
 If you have any problems or need help with the code, please add an issue or contact shwan0106@kaist.ac.kr.
+
+### TL;DR
+```
+python test/calculate_score.py -c -m 'test/result/rnn_worlddrug' -s 'c1ccccc1'
+# output: c1ccccc1,86.493
+```
+* `86.493` is the predicted score. The higher the predicted value is, the higher druglikeness is. 
+* [See below for more details](#test)
+
+### Citation
+```
+@article{lee2022drug,
+  title={Drug-likeness scoring based on unsupervised learning},
+  author={Lee, Kyunghoon and Jang, Jinho and Seo, Seonghwan and Lim, Jaechang and Kim, Woo Youn},
+  journal={Chemical science},
+  volume={13},
+  number={2},
+  pages={554--565},
+  year={2022},
+  publisher={Royal Society of Chemistry}
+}
+```
+### Issue
+
+Our script could not read the character 'X'. Please filter out the molecules that contain Xe atoms.
+
+### Recommend (Training)
+
+Although we set the hidden dimension of RNNLM to 1024 in paper, I recommend using a smaller dimension. (256, 512, ...)
+
+You can add 'X' character in `src/utils/data_utils/smiles_utils.py` if you want to use Xe atom. 
 
 ## Table of Contents
 
@@ -316,5 +349,3 @@ optional arguments:
   -o OUTPUT, --output OUTPUT # TODO
                         ROC graph output path(matplotlib required) 
 ```
-
-TODO

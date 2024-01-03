@@ -26,7 +26,7 @@ If you have any problems or need help with the code, please add an issue or cont
 - Python=3.7
 - [RDKit](https://www.rdkit.org/docs/Install.html)=2020.09.4
 - [PyTorch](https://pytorch.org/)=1.7.1, CUDA=10.2
-- [Hydra](https://hydra.cc/)=1.0.6
+- [Hydra](https://hydra.cc/)=1.3.2
 - [scikit-learn](https://scikit-learn.org/stable/)=0.24.1
 - [Pandas](https://pandas.pydata.org/)=1.2.2 (Used in Research Section)
 

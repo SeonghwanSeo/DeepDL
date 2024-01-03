@@ -12,6 +12,7 @@ from omegaconf import DictConfig
 All code is from https://github.com/NVIDIA/NeMo
 """
 
+
 def hydra_runner(
     config_path: Optional[str] = None, config_name: Optional[str] = None, schema: Optional[Any] = None
 ) -> Callable[[TaskFunction], Any]:
@@ -84,7 +85,8 @@ def hydra_runner(
                 # no return value from run_hydra() as it may sometime actually run the task_function
                 # multiple times (--multirun)
                 _run_hydra(
-                    args_parser=_argparse_wrapper(args),
+                    args=parsed_args,
+                    args_parser=args,
                     task_function=task_function,
                     config_path=config_path,
                     config_name=config_name,

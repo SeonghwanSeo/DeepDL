@@ -3,7 +3,7 @@
 Official github for [Drug-likeness scoring based on unsupervised learning](https://pubs.rsc.org/en/content/articlehtml/2022/sc/d1sc05248a)
 by Kyunghoon Lee*, Jinho Jang*, Seonghwan Seo*, Jaechang Lim, and Woo Youn Kim. (*Chemical Science*)
 
-#### A [new repository](https://github.com/SeonghwanSeo/drug-likeness) is now available, including version updates, less dependencies, and a Python API.
+#### [NOTICE] A [new repository](https://github.com/SeonghwanSeo/drug-likeness) is now available, including version updates, less dependencies, and a Python API.
 
 
 After submitting the paper, I modified the code for readability and convenient use. The seed value may change during this process, which may change the result. All model weights used in paper are accessible at `test/result` (RNNLM: ~100MB, GCN: ~550KB)

@@ -3,6 +3,9 @@
 Official github for [Drug-likeness scoring based on unsupervised learning](https://pubs.rsc.org/en/content/articlehtml/2022/sc/d1sc05248a)
 by Kyunghoon Lee*, Jinho Jang*, Seonghwan Seo*, Jaechang Lim, and Woo Youn Kim. (*Chemical Science*)
 
+#### A [new repository](https://github.com/SeonghwanSeo/drug-likeness) is now available, including version updates, less dependencies, and a Python API.
+
+
 After submitting the paper, I modified the code for readability and convenient use. The seed value may change during this process, which may change the result. All model weights used in paper are accessible at `test/result` (RNNLM: ~100MB, GCN: ~550KB)
 If there is any problem using the weight file, download the pre-trained file from following link. Our main RNNLM model is uploaded.
 https://drive.google.com/drive/folders/1H3G1Y8ynyly485QtrqyWnUfseSzHaC6I?usp=sharing
@@ -18,7 +21,7 @@ python test/calculate_score.py -c -m 'test/result/rnn_worlddrug' -s 'c1ccccc1'
 * [See below for more details](#test)
 
 ### Citation
-```
+```bibtex
 @article{lee2022drug,
   title={Drug-likeness scoring based on unsupervised learning},
   author={Lee, Kyunghoon and Jang, Jinho and Seo, Seonghwan and Lim, Jaechang and Kim, Woo Youn},
@@ -30,6 +33,7 @@ python test/calculate_score.py -c -m 'test/result/rnn_worlddrug' -s 'c1ccccc1'
   publisher={Royal Society of Chemistry}
 }
 ```
+
 ### Issue
 
 Our script could not read the character 'X'. Please filter out the molecules that contain Xe atoms.
@@ -349,3 +353,4 @@ optional arguments:
   -o OUTPUT, --output OUTPUT # TODO
                         ROC graph output path(matplotlib required) 
 ```
+

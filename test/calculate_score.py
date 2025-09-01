@@ -7,9 +7,10 @@ from rdkit import Chem
 from rdkit.Chem.Descriptors import qed
 from pathlib import Path
 
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), 'src'))
+sys.path.append(
+    os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "src")
+)
 from models import RNNLM, GCNModel
-import utils as UTILS
 
 """
 i) When the argument MODEL is path for directory, we use deep learning model for scoring.
@@ -42,67 +43,77 @@ For the testsets used in our study, I set simple aliases for them. (See TEST_FIL
 """
 
 TEST_FILE_LIST = {
-    'chembl': '../data/test/chembl.smi',
-    'fda': '../data/test/fda.smi',
-    'gdb17': '../data/test/gdb17.smi',
-    'invest': '../data/test/investigation.smi',
-    'investigation': '../data/test/investigation.smi',
-    'zinc15': '../data/test/zinc15.smi',
+    "chembl": "../data/test/chembl.smi",
+    "fda": "../data/test/fda.smi",
+    "gdb17": "../data/test/gdb17.smi",
+    "invest": "../data/test/investigation.smi",
+    "investigation": "../data/test/investigation.smi",
+    "zinc15": "../data/test/zinc15.smi",
 }
 
-class QED_model (object):
+
+class QED_model(object):
     @staticmethod
-    def test (smiles: str):
+    def test(smiles: str):
         mol = Chem.MolFromSmiles(smiles)
         return qed(mol)
 
-parser = ArgumentParser(description='Calculate Drug-likeness With Model')
-parser.add_argument('-g', '--gpu', dest='cuda', action='store_true', help='use device CUDA, default')
-parser.add_argument('-c', '--cpu', dest='cuda', action='store_false', help='use device CPU')
-parser.set_defaults(cuda=True)
-parser.add_argument('-m', '--model', required=True, type=str, help='model path or model architecture(QED)')
-parser.add_argument('-t', '--test_file', type=str, help='test file path', default = None)
-parser.add_argument('-s', '--smiles', type=str, help='test smiles', default = None)
-parser.add_argument('-o', '--output', type=str, help='output file. default is STDOUT', default='stdout')
+
+parser = ArgumentParser(description="Calculate Drug-likeness With Model")
+parser.add_argument(
+    "-g", "--gpu", dest="cuda", action="store_true", help="use device CUDA, default"
+)
+parser.add_argument(
+    "-m",
+    "--model",
+    type=str,
+    help="model path or model architecture(QED)",
+    default="./test/result/rnn_pubchem_worlddrug/",
+)
+parser.add_argument("-t", "--test_file", type=str, help="test file path", default=None)
+parser.add_argument("-s", "--smiles", type=str, help="test smiles", default=None)
+parser.add_argument(
+    "-o", "--output", type=str, help="output file. default is STDOUT", default="stdout"
+)
 args = parser.parse_args()
 
 # Set up
-assert (args.test_file or args.smiles), "Neither TEST_FILE nor SMILES exist."
-if args.test_file != None :
+assert args.test_file or args.smiles, "Neither TEST_FILE nor SMILES exist."
+if args.test_file != None:
     test_file = TEST_FILE_LIST.get(args.test_file, args.test_file)
-    with open(test_file) as f :
+    with open(test_file) as f:
         test_smiles = [l.strip() for l in f.readlines()]
-else :
+else:
     test_smiles = [args.smiles]
 
-device = "cuda:0" if args.cuda else 'cpu'
+device = "cuda:0" if args.cuda else "cpu"
 output_file = args.output
 
 Logger = logging.getLogger()
 Logger.setLevel(logging.INFO)
-if output_file == 'stdout' :
+if output_file == "stdout":
     Logger.addHandler(logging.StreamHandler())
-else :
+else:
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-    Logger.addHandler(logging.FileHandler(output_file, 'w'))
+    Logger.addHandler(logging.FileHandler(output_file, "w"))
 
-if args.model == 'QED' or args.model == 'qed' :
+if args.model == "QED" or args.model == "qed":
     model = QED_model()
-else :
+else:
     model_path = args.model
-    model_config_file = os.path.join(model_path, 'config.yaml')
+    model_config_file = os.path.join(model_path, "config.yaml")
     config = OmegaConf.load(model_config_file)
-    model_architecture = config.model.model # RNNLM or GCNModel
+    model_architecture = config.model.model  # RNNLM or GCNModel
 
-    if model_architecture == 'RNNLM' :
+    if model_architecture == "RNNLM":
         model = RNNLM.load_model(model_path, device)
-    elif model_architecture == 'GCNModel' :
+    elif model_architecture == "GCNModel":
         model = GCNModel.load_model(model_path, device)
-    else :
+    else:
         logging.warning("ERR: Not Allowed Model Architecture")
         exit(1)
 
 # Run
-for smiles in test_smiles :
+for smiles in test_smiles:
     score = model.test(smiles)
-    logging.info(f'{smiles},{score:.3f}')
+    logging.info(f"{smiles},{score:.3f}")
